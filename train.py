@@ -2,7 +2,6 @@ import argparse
 import os
 import sys
 import time
-import json
 import torch
 import torch.nn.functional as F
 import utils
@@ -10,7 +9,6 @@ import tabulate
 import models
 from data import get_data
 import numpy as np
-from tensorboardX import SummaryWriter
 from qtorch.auto_low import lower
 from qtorch.optim import OptimLP
 from torch.optim.lr_scheduler import LambdaLR
