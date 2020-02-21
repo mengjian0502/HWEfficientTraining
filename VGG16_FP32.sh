@@ -2,6 +2,7 @@ python train.py --dataset CIFAR10 \
                 --data_path ./data \
                 --model VGG16 \
                 --log_file './logs/VGG16_FP32.log' \
+                --save_file 'VGG16_FP32.pth' \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \
