@@ -45,7 +45,7 @@ def print_table(values, columns, epoch, logger):
     logger.info(table)
 
 def run_epoch(loader, model, criterion, optimizer=None,
-              phase="train"):
+              phase="train", loss_scaling=1.0):
     assert phase in ["train", "val", "test"], "invalid running phase"
     loss_sum = 0.0
     correct = 0.0
@@ -69,7 +69,7 @@ def run_epoch(loader, model, criterion, optimizer=None,
 
             if phase=="train":
                 optimizer.zero_grad()
-                loss = loss * 1000 # grad scaling
+                loss = loss * loss_scaling # grad scaling
                 loss.backward()
                 optimizer.step()
 

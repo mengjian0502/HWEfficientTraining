@@ -81,15 +81,16 @@ loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio
 if args.dataset=="CIFAR10": num_classes=10
 elif args.dataset=="IMAGENET12": num_classes=1000
 
-quantizers = {}
-for num in num_types:
-    num_rounding = getattr(args, "{}_rounding".format(num))
-    num_man = getattr(args, "{}_man".format(num))
-    num_exp = getattr(args, "{}_exp".format(num))
-    number = FloatingPoint(exp=num_exp, man=num_man)
-    logger.info("{}: {} rounding, {}".format(num, num_rounding,
-                                       number))
-    quantizers[num] = quantizer(forward_number=number, forward_rounding=num_rounding)
+if 'LP' in args.model:
+    quantizers = {}
+    for num in num_types:
+        num_rounding = getattr(args, "{}_rounding".format(num))
+        num_man = getattr(args, "{}_man".format(num))
+        num_exp = getattr(args, "{}_exp".format(num))
+        number = FloatingPoint(exp=num_exp, man=num_man)
+        logger.info("{}: {} rounding, {}".format(num, num_rounding,
+                                           number))
+        quantizers[num] = quantizer(forward_number=number, forward_rounding=num_rounding)
 # Build model
 logger.info('Model: {}'.format(args.model))
 model_cfg = getattr(models, args.model)
@@ -117,13 +118,15 @@ optimizer = SGD(
    momentum=args.momentum,
    weight_decay=args.wd,
 )
+loss_scaling = 1.0
 if 'LP' in args.model:
+    loss_scaling = 1000.0
     optimizer = OptimLP(optimizer,
                         weight_quant=quantizers["weight"],
                         grad_quant=quantizers["grad"],
                         momentum_quant=quantizers["momentum"],
                         acc_quant=quantizers["acc"],
-                        grad_scaling=1/1000 # scaling down the gradient
+                        grad_scaling=1/loss_scaling # scaling down the gradient
     )
 
 def schedule(epoch):
@@ -142,10 +145,10 @@ scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
 
-def get_result(loaders, model, phase):
+def get_result(loaders, model, phase, loss_scaling=1000.0):
     time_ep = time.time()
     res = utils.run_epoch(loaders[phase], model, criterion,
-                                optimizer=optimizer, phase=phase)
+                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
     time_pass = time.time() - time_ep
     res['time_pass'] = time_pass
     return res
@@ -154,8 +157,8 @@ for epoch in range(args.epochs):
 
     scheduler.step()
     time_ep = time.time()
-    train_res = get_result(loaders, model, "train")
-    test_res = get_result(loaders, model, "test")
+    train_res = get_result(loaders, model, "train", loss_scaling)
+    test_res = get_result(loaders, model, "test", loss_scaling)
 
     values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
 
