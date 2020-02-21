@@ -1,0 +1,184 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Base	models/vgg.py	/^class Base:$/;"	c
+Base	models/vgg_low.py	/^class Base:$/;"	c
+Base	models/vgg_low_TD.py	/^class Base:$/;"	c
+BasicBlock	models/preresnet.py	/^class BasicBlock(nn.Module):$/;"	c
+BasicBlock	models/preresnet_low.py	/^class BasicBlock(nn.Module):$/;"	c
+Bottleneck	models/preresnet.py	/^class Bottleneck(nn.Module):$/;"	c
+Bottleneck	models/preresnet_low.py	/^class Bottleneck(nn.Module):$/;"	c
+Conv2d_TD	models/td.py	/^class Conv2d_TD(nn.Conv2d):$/;"	c
+Hook_record_input	utils.py	/^class Hook_record_input():$/;"	c
+Linear_TD	models/td.py	/^class Linear_TD(nn.Linear):$/;"	c
+PreResNet	models/preresnet.py	/^class PreResNet(nn.Module):$/;"	c
+PreResNet	models/preresnet_low.py	/^class PreResNet(nn.Module):$/;"	c
+PreResNet110	models/preresnet.py	/^class PreResNet110:$/;"	c
+PreResNet110LP	models/preresnet_low.py	/^class PreResNet110LP:$/;"	c
+PreResNet20	models/preresnet.py	/^class PreResNet20:$/;"	c
+PreResNet20LP	models/preresnet_low.py	/^class PreResNet20LP:$/;"	c
+VGG	models/vgg.py	/^class VGG(nn.Module):$/;"	c
+VGG	models/vgg_low.py	/^class VGG(nn.Module):$/;"	c
+VGG	models/vgg_low_TD.py	/^class VGG(nn.Module):$/;"	c
+VGG16	models/vgg.py	/^class VGG16(Base):$/;"	c
+VGG16BN	models/vgg.py	/^class VGG16BN(Base):$/;"	c
+VGG16BNLP	models/vgg_low.py	/^class VGG16BNLP(Base):$/;"	c
+VGG16BNLP_TD	models/vgg_low_TD.py	/^class VGG16BNLP_TD(Base):$/;"	c
+VGG16LP	models/vgg_low.py	/^class VGG16LP(Base):$/;"	c
+VGG16LP_TD	models/vgg_low_TD.py	/^class VGG16LP_TD(Base):$/;"	c
+VGG19	models/vgg.py	/^class VGG19(Base):$/;"	c
+VGG19BN	models/vgg.py	/^class VGG19BN(Base):$/;"	c
+VGG19BNLP	models/vgg_low.py	/^class VGG19BNLP(Base):$/;"	c
+VGG19BNLP_TD	models/vgg_low_TD.py	/^class VGG19BNLP_TD(Base):$/;"	c
+VGG19LP	models/vgg_low.py	/^class VGG19LP(Base):$/;"	c
+VGG19LP_TD	models/vgg_low_TD.py	/^class VGG19LP_TD(Base):$/;"	c
+__all__	models/preresnet.py	/^__all__ = ['PreResNet110', 'PreResNet20']$/;"	v
+__all__	models/preresnet_low.py	/^__all__ = ['PreResNet110LP', 'PreResNet20LP']$/;"	v
+__all__	models/vgg.py	/^__all__ = ['VGG16', 'VGG16BN', 'VGG19', 'VGG19BN']$/;"	v
+__all__	models/vgg_low.py	/^__all__ = ['VGG16LP', 'VGG16BNLP', 'VGG19LP', 'VGG19BNLP']$/;"	v
+__all__	models/vgg_low_TD.py	/^__all__ = ['VGG16LP_TD', 'VGG16BNLP_TD', 'VGG19LP_TD', 'VGG19BNLP_TD']$/;"	v
+__init__	models/preresnet.py	/^    def __init__(self, inplanes, planes, stride=1, downsample=None):$/;"	m	class:BasicBlock
+__init__	models/preresnet.py	/^    def __init__(self, inplanes, planes, stride=1, downsample=None):$/;"	m	class:Bottleneck
+__init__	models/preresnet.py	/^    def __init__(self, num_classes=10, depth=110):$/;"	m	class:PreResNet
+__init__	models/preresnet_low.py	/^    def __init__(self, inplanes, planes, quant, stride=1, downsample=None):$/;"	m	class:BasicBlock
+__init__	models/preresnet_low.py	/^    def __init__(self, inplanes, planes, quant, stride=1, downsample=None):$/;"	m	class:Bottleneck
+__init__	models/preresnet_low.py	/^    def __init__(self,quant, num_classes=10, depth=110):$/;"	m	class:PreResNet
+__init__	models/td.py	/^    def __init__(self, in_channels, out_channels, kernel_size, stride=1, $/;"	m	class:Conv2d_TD
+__init__	models/td.py	/^    def __init__(self, in_features, out_features, bias=True, gamma=0.0, alpha=0.0, block_size=16):$/;"	m	class:Linear_TD
+__init__	models/vgg.py	/^    def __init__(self, num_classes=10, depth=16, batch_norm=False):$/;"	m	class:VGG
+__init__	models/vgg_low.py	/^    def __init__(self, quant=None, num_classes=10, depth=16, batch_norm=False):$/;"	m	class:VGG
+__init__	models/vgg_low_TD.py	/^    def __init__(self, quant=None, num_classes=10, depth=16, batch_norm=False, gamma=0.5, alpha=0.5, block_size=16):$/;"	m	class:VGG
+__init__	utils.py	/^    def __init__(self, module):$/;"	m	class:Hook_record_input
+_make_layer	models/preresnet.py	/^    def _make_layer(self, block, planes, blocks, stride=1):$/;"	m	class:PreResNet
+_make_layer	models/preresnet_low.py	/^    def _make_layer(self, block, planes, blocks, quant, stride=1):$/;"	m	class:PreResNet
+acc_quant	train.py	/^                        acc_quant=quantizers["acc"],$/;"	v
+activate_number	train.py	/^    activate_number = FloatingPoint(exp=args.activate_exp, man=args.activate_man)$/;"	v
+add_input_record_Hook	utils.py	/^def add_input_record_Hook(model, name_as_key=False):$/;"	f
+adjust_learning_rate	utils.py	/^def adjust_learning_rate(optimizer, lr):$/;"	f
+args	models/preresnet.py	/^    args = list()$/;"	v	class:PreResNet110
+args	models/preresnet.py	/^    args = list()$/;"	v	class:PreResNet20
+args	models/preresnet_low.py	/^    args = list()$/;"	v	class:PreResNet110LP
+args	models/preresnet_low.py	/^    args = list()$/;"	v	class:PreResNet20LP
+args	models/vgg.py	/^    args = list()$/;"	v	class:Base
+args	models/vgg_low.py	/^    args = list()$/;"	v	class:Base
+args	models/vgg_low_TD.py	/^    args = list()$/;"	v	class:Base
+args	train.py	/^args = parser.parse_args()$/;"	v
+base	models/preresnet.py	/^    base = PreResNet$/;"	v	class:PreResNet110
+base	models/preresnet.py	/^    base = PreResNet$/;"	v	class:PreResNet20
+base	models/preresnet_low.py	/^    base = PreResNet$/;"	v	class:PreResNet110LP
+base	models/preresnet_low.py	/^    base = PreResNet$/;"	v	class:PreResNet20LP
+base	models/vgg.py	/^    base = VGG$/;"	v	class:Base
+base	models/vgg_low.py	/^    base = VGG$/;"	v	class:Base
+base	models/vgg_low_TD.py	/^    base = VGG$/;"	v	class:Base
+cfg	models/vgg.py	/^cfg = {$/;"	v
+cfg	models/vgg_low.py	/^cfg = {$/;"	v
+cfg	models/vgg_low_TD.py	/^cfg = {$/;"	v
+choices	train.py	/^                        choices=["stochastic","nearest"],$/;"	v
+close	utils.py	/^    def close(self):$/;"	m	class:Hook_record_input
+columns	train.py	/^columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']$/;"	v
+conv3x3	models/preresnet.py	/^def conv3x3(in_planes, out_planes, stride=1):$/;"	f
+conv3x3	models/preresnet_low.py	/^def conv3x3(in_planes, out_planes, stride=1):$/;"	f
+criterion	train.py	/^criterion = F.cross_entropy$/;"	v
+error_number	train.py	/^    error_number = FloatingPoint(exp=args.error_exp, man=args.error_man)$/;"	v
+expansion	models/preresnet.py	/^    expansion = 1$/;"	v	class:BasicBlock
+expansion	models/preresnet.py	/^    expansion = 4$/;"	v	class:Bottleneck
+expansion	models/preresnet_low.py	/^    expansion = 1$/;"	v	class:BasicBlock
+expansion	models/preresnet_low.py	/^    expansion = 4$/;"	v	class:Bottleneck
+fileHandler	train.py	/^    fileHandler = logging.FileHandler(args.log_file)$/;"	v
+forward	models/preresnet.py	/^    def forward(self, x):$/;"	m	class:BasicBlock
+forward	models/preresnet.py	/^    def forward(self, x):$/;"	m	class:Bottleneck
+forward	models/preresnet.py	/^    def forward(self, x):$/;"	m	class:PreResNet
+forward	models/preresnet_low.py	/^    def forward(self, x):$/;"	m	class:BasicBlock
+forward	models/preresnet_low.py	/^    def forward(self, x):$/;"	m	class:Bottleneck
+forward	models/preresnet_low.py	/^    def forward(self, x):$/;"	m	class:PreResNet
+forward	models/td.py	/^    def forward(self, input):$/;"	m	class:Conv2d_TD
+forward	models/td.py	/^    def forward(self, input):$/;"	m	class:Linear_TD
+forward	models/vgg.py	/^    def forward(self, x):$/;"	m	class:VGG
+forward	models/vgg_low.py	/^    def forward(self, x):$/;"	m	class:VGG
+forward	models/vgg_low_TD.py	/^    def forward(self, x):$/;"	m	class:VGG
+get_data	data.py	/^def get_data(dataset, data_path, batch_size, val_ratio, num_workers):$/;"	f
+get_result	train.py	/^def get_result(loaders, model, phase):$/;"	f
+grad_quant	train.py	/^                        grad_quant=quantizers["grad"],$/;"	v
+grad_scaling	train.py	/^                        grad_scaling=1\/1000 # scaling down the gradient$/;"	v
+help	train.py	/^                        help='number of bits to use for exponent of {}; -1 if full precision.'.format(num))$/;"	v
+help	train.py	/^                        help='number of bits to use for mantissa of {}; -1 if full precision.'.format(num))$/;"	v
+help	train.py	/^                        help='rounding method for {}, stochastic or nearest'.format(num))$/;"	v
+help	train.py	/^                    help='Ratio of the validation set (default: 0.0)')$/;"	v
+help	train.py	/^                    help='SGD momentum (default: 0.9)')$/;"	v
+help	train.py	/^                    help='alpha value for targeted dropout')$/;"	v
+help	train.py	/^                    help='block size for dropout')$/;"	v
+help	train.py	/^                    help='checkpoint to resume training from (default: None)')$/;"	v
+help	train.py	/^                    help='dataset name: CIFAR10 or IMAGENET12')$/;"	v
+help	train.py	/^                    help='gamma value for targeted dropout')$/;"	v
+help	train.py	/^                    help='initial learning rate (default: 0.01)')$/;"	v
+help	train.py	/^                    help='input batch size (default: 128)')$/;"	v
+help	train.py	/^                    help='model name (default: None)')$/;"	v
+help	train.py	/^                    help='number of epochs to train (default: 200)')$/;"	v
+help	train.py	/^                    help='number of workers (default: 4)')$/;"	v
+help	train.py	/^                    help='path to datasets location (default: ".\/data")')$/;"	v
+help	train.py	/^                    help='path to log file')$/;"	v
+help	train.py	/^                    help='path to save file for model')$/;"	v
+help	train.py	/^                    help='weight decay (default: 1e-4)')$/;"	v
+hook_fn	utils.py	/^    def hook_fn(self, module, input, output):$/;"	m	class:Hook_record_input
+kwargs	models/preresnet.py	/^    kwargs = {'depth': 110}$/;"	v	class:PreResNet110
+kwargs	models/preresnet.py	/^    kwargs = {'depth': 20}$/;"	v	class:PreResNet20
+kwargs	models/preresnet_low.py	/^    kwargs = {'depth': 110}$/;"	v	class:PreResNet110LP
+kwargs	models/preresnet_low.py	/^    kwargs = {'depth': 20}$/;"	v	class:PreResNet20LP
+kwargs	models/vgg.py	/^    kwargs = dict()$/;"	v	class:Base
+kwargs	models/vgg.py	/^    kwargs = {'batch_norm': True}$/;"	v	class:VGG16BN
+kwargs	models/vgg.py	/^    kwargs = {'depth': 19, 'batch_norm': True}$/;"	v	class:VGG19BN
+kwargs	models/vgg.py	/^    kwargs = {'depth': 19}$/;"	v	class:VGG19
+kwargs	models/vgg_low.py	/^    kwargs = dict()$/;"	v	class:Base
+kwargs	models/vgg_low.py	/^    kwargs = {'batch_norm': True}$/;"	v	class:VGG16BNLP
+kwargs	models/vgg_low.py	/^    kwargs = {'depth': 19, 'batch_norm': True}$/;"	v	class:VGG19BNLP
+kwargs	models/vgg_low.py	/^    kwargs = {'depth': 19}$/;"	v	class:VGG19LP
+kwargs	models/vgg_low_TD.py	/^    kwargs = dict()$/;"	v	class:Base
+kwargs	models/vgg_low_TD.py	/^    kwargs = {'batch_norm': True}$/;"	v	class:VGG16BNLP_TD
+kwargs	models/vgg_low_TD.py	/^    kwargs = {'depth': 19, 'batch_norm': True}$/;"	v	class:VGG19BNLP_TD
+kwargs	models/vgg_low_TD.py	/^    kwargs = {'depth': 19}$/;"	v	class:VGG19LP_TD
+loaders	train.py	/^loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio, args.num_workers)$/;"	v
+logger	tmp.py	/^logger = logging.getLogger('test')$/;"	v
+logger	train.py	/^logger = logging.getLogger('training')$/;"	v
+lr	train.py	/^   lr=args.lr_init,$/;"	v
+make_layers	models/vgg.py	/^def make_layers(cfg, batch_norm=False):$/;"	f
+make_layers	models/vgg_low.py	/^def make_layers(cfg, quant, batch_norm=False):$/;"	f
+make_layers	models/vgg_low_TD.py	/^def make_layers(cfg, quant, batch_norm=False, gamma=0.5, alpha=0.5, block_size=16):$/;"	f
+make_quant	train.py	/^    make_quant = lambda : Quantizer(activate_number, error_number, args.activate_rounding, args.error_rounding)$/;"	v
+model	train.py	/^model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)$/;"	v
+model_cfg	train.py	/^model_cfg = getattr(models, args.model)$/;"	v
+momentum	train.py	/^   momentum=args.momentum,$/;"	v
+momentum_quant	train.py	/^                        momentum_quant=quantizers["momentum"],$/;"	v
+num_exp	train.py	/^    num_exp = getattr(args, "{}_exp".format(num))$/;"	v
+num_man	train.py	/^    num_man = getattr(args, "{}_man".format(num))$/;"	v
+num_rounding	train.py	/^    num_rounding = getattr(args, "{}_rounding".format(num))$/;"	v
+num_types	train.py	/^num_types = ["weight", "activate", "grad", "error", "momentum", "acc"]$/;"	v
+number	train.py	/^    number = FloatingPoint(exp=num_exp, man=num_man)$/;"	v
+optimizer	train.py	/^    optimizer = OptimLP(optimizer,$/;"	v
+optimizer	train.py	/^optimizer = SGD($/;"	v
+parser	train.py	/^parser = argparse.ArgumentParser(description='SGD\/SWA training')$/;"	v
+print_table	utils.py	/^def print_table(values, columns, epoch, logger):$/;"	f
+quantizers	train.py	/^quantizers = {}$/;"	v
+remove_hooks	utils.py	/^def remove_hooks(Hooks):$/;"	f
+run_epoch	utils.py	/^def run_epoch(loader, model, criterion, optimizer=None,$/;"	f
+schedule	train.py	/^def schedule(epoch):$/;"	f
+scheduler	train.py	/^scheduler = LambdaLR(optimizer, lr_lambda=[schedule])$/;"	v
+streamHandler	train.py	/^streamHandler = logging.StreamHandler()$/;"	v
+test_res	train.py	/^    test_res = get_result(loaders, model, "test")$/;"	v
+time_ep	train.py	/^    time_ep = time.time()$/;"	v
+train_res	train.py	/^    train_res = get_result(loaders, model, "train")$/;"	v
+transform_test	models/preresnet.py	/^    transform_test = transforms.Compose([$/;"	v	class:PreResNet110
+transform_test	models/preresnet.py	/^    transform_test = transforms.Compose([$/;"	v	class:PreResNet20
+transform_test	models/vgg.py	/^    transform_test = transforms.Compose([$/;"	v	class:Base
+transform_test	models/vgg_low.py	/^    transform_test = transforms.Compose([$/;"	v	class:Base
+transform_test	models/vgg_low_TD.py	/^    transform_test = transforms.Compose([$/;"	v	class:Base
+transform_train	models/preresnet.py	/^    transform_train = transforms.Compose([$/;"	v	class:PreResNet110
+transform_train	models/preresnet.py	/^    transform_train = transforms.Compose([$/;"	v	class:PreResNet20
+transform_train	models/vgg.py	/^    transform_train = transforms.Compose([$/;"	v	class:Base
+transform_train	models/vgg_low.py	/^    transform_train = transforms.Compose([$/;"	v	class:Base
+transform_train	models/vgg_low_TD.py	/^    transform_train = transforms.Compose([$/;"	v	class:Base
+values	train.py	/^    values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]$/;"	v
+weight_decay	train.py	/^   weight_decay=args.wd,$/;"	v
+weight_quant	train.py	/^                        weight_quant=quantizers["weight"],$/;"	v
