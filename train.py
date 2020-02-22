@@ -104,8 +104,8 @@ if 'LP' in args.model:
 
 if 'TD' in args.model:
     logger.info("block size: {}".format(args.block_size))
-    logger.info("TD gamma: {0:.2f}".format(args.TD_gamma))
-    logger.info("TD alpha: {0:.2f}".format(args.TD_alpha))
+    logger.info("TD gamma: {0:.3f}".format(args.TD_gamma))
+    logger.info("TD alpha: {0:.3f}".format(args.TD_alpha))
     model_cfg.kwargs.update({"gamma":args.TD_gamma, "alpha":args.TD_alpha, "block_size":args.block_size})
 
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
