@@ -2,8 +2,8 @@
 block_size=${1:-16}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-log_name="./logs/VGG16_FP16_TD_${block_size}_${gamma}_${alpha}.log" 
-save_file_name="VGG16_FP16_TD_${block_size}_${gamma}_${alpha}.pth" 
+log_name="./logs/VGG16_FP32_TD_${block_size}_${gamma}_${alpha}.log" 
+save_file_name="VGG16_FP32_TD_${block_size}_${gamma}_${alpha}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \

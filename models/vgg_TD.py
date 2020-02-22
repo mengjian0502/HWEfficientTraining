@@ -19,9 +19,9 @@ def make_layers(cfg, batch_norm=False, gamma=0.5, alpha=0.5, block_size=16):
             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         else:
             if in_channels == 3:
-                conv2d = nn.Conv2d(in_channels, filters, kernel_size=3, padding=1)
+                conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
             else:
-                conv2d = Conv2d_TD(in_channels, filters, kernel_size=3, padding=1, gamma=gamma, 
+                conv2d = Conv2d_TD(in_channels, v, kernel_size=3, padding=1, gamma=gamma, 
                                     alpha=alpha, block_size=block_size)
             if batch_norm:
                 layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
