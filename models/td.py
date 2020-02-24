@@ -32,6 +32,10 @@ class Conv2d_TD(nn.Conv2d):
             out += self.bias.view(1, -1, 1, 1).expand_as(out)
 
         return out
+    
+    def extra_repr(self):
+        return super(Conv2d_TD, self).extra_repr() + ', gamma={}, alpha={}, block_size={}'.format(
+                self.gamma, self.alpha, self.block_size)
 
 class Linear_TD(nn.Linear):
     def __init__(self, in_features, out_features, bias=True, gamma=0.0, alpha=0.0, block_size=16):
@@ -55,3 +59,6 @@ class Linear_TD(nn.Linear):
                                 scale_factor=(self.block_size, self.block_size)).squeeze()
         return F.linear(input, self.weight * mask_keep_original, self.bias)
 
+    def extra_repr(self):
+        return super(Linear_TD, self).extra_repr() + ', gamma={}, alpha={}, block_size={}'.format(
+                self.gamma, self.alpha, self.block_size)

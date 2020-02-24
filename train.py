@@ -22,23 +22,23 @@ num_types = ["weight", "activate", "grad", "error", "momentum", "acc"]
 parser = argparse.ArgumentParser(description='SGD/SWA training')
 parser.add_argument('--dataset', type=str, default='CIFAR10',
                     help='dataset name: CIFAR10 or IMAGENET12')
-parser.add_argument('--data_path', type=str, default="./data", required=True, metavar='PATH',
+parser.add_argument('--data_path', type=str, default="./data",
                     help='path to datasets location (default: "./data")')
-parser.add_argument('--batch_size', type=int, default=128, metavar='N',
+parser.add_argument('--batch_size', type=int, default=128,
                     help='input batch size (default: 128)')
-parser.add_argument('--val_ratio', type=float, default=0.0, metavar='N',
+parser.add_argument('--val_ratio', type=float, default=0.0,
                     help='Ratio of the validation set (default: 0.0)')
-parser.add_argument('--num_workers', type=int, default=4, metavar='N',
+parser.add_argument('--num_workers', type=int, default=4, 
                     help='number of workers (default: 4)')
-parser.add_argument('--model', type=str, default=None, required=True, metavar='MODEL',
+parser.add_argument('--model', type=str, default='VGG16',
                     help='model name (default: None)')
-parser.add_argument('--resume', type=str, default=None, metavar='CKPT',
+parser.add_argument('--resume', type=str, default=None, 
                     help='checkpoint to resume training from (default: None)')
-parser.add_argument('--epochs', type=int, default=200, metavar='N',
+parser.add_argument('--epochs', type=int, default=200, 
                     help='number of epochs to train (default: 200)')
-parser.add_argument('--lr_init', type=float, default=0.01, metavar='LR',
+parser.add_argument('--lr_init', type=float, default=0.01,
                     help='initial learning rate (default: 0.01)')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
+parser.add_argument('--momentum', type=float, default=0.9,
                     help='SGD momentum (default: 0.9)')
 parser.add_argument('--wd', type=float, default=1e-4,
                     help='weight decay (default: 1e-4)')
@@ -52,6 +52,8 @@ parser.add_argument('--TD_alpha', type=float, default=0.0,
                     help='alpha value for targeted dropout')
 parser.add_argument('--block_size', type=int, default=16,
                     help='block size for dropout')
+parser.add_argument('--evaluate', type=str, default=None,
+                    help='model file for accuracy evaluation')
 
 
 for num in num_types:
@@ -152,6 +154,18 @@ def get_result(loaders, model, phase, loss_scaling=1000.0):
     time_pass = time.time() - time_ep
     res['time_pass'] = time_pass
     return res
+
+if args.evaluate is not None:
+    model = torch.load(args.evaluate).cuda()
+    # update TD gamma and alpha value if needed
+    for m in model.modules():
+        if hasattr(m, 'gamma'):
+            m.gamma = args.TD_gamma
+            m.alpha = args.TD_alpha
+    print(model)
+    test_res = get_result(loaders, model, "test", loss_scaling)
+    print("test accuracy = %.3f%%" % test_res['accuracy'])
+    exit()
 
 for epoch in range(args.epochs):
 
