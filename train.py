@@ -86,6 +86,25 @@ loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio
 if args.dataset=="CIFAR10": num_classes=10
 elif args.dataset=="IMAGENET12": num_classes=1000
 
+def get_result(loaders, model, phase, loss_scaling=1000.0):
+    time_ep = time.time()
+    res = utils.run_epoch(loaders[phase], model, criterion,
+                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
+    time_pass = time.time() - time_ep
+    res['time_pass'] = time_pass
+    return res
+
+if args.evaluate is not None:
+    checkpoint = torch.load(args.evaluate)
+    # replace certain args with saved args
+    saved_args = checkpoint['args']
+    for num in num_types:
+        setattr(args, '{}-man'.format(num), getattr(saved_args, '{}-man'.format(num)))
+        setattr(args, '{}-exp'.format(num), getattr(saved_args, '{}-exp'.format(num)))
+        setattr(args, '{}-rounding'.format(num), getattr(saved_args, '{}-rounding'.format(num)))
+    args.block_size = saved_args.block_size
+
+
 if 'LP' in args.model:
     quantizers = {}
     for num in num_types:
@@ -115,6 +134,18 @@ if 'TD' in args.model:
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
 logger.info('Model: {}'.format(model))
 model.cuda()
+
+if args.evaluate is not None:
+    model.load_state_dict(checkpoint['state_dict'])
+    # update TD gamma and alpha value if needed
+    for m in model.modules():
+        if hasattr(m, 'gamma'):
+            m.gamma = args.TD_gamma
+            m.alpha = args.TD_alpha
+    print(model)
+    test_res = get_result(loaders, model, "test", loss_scaling)
+    print("test accuracy = %.3f%%" % test_res['accuracy'])
+    exit()
 
 criterion = F.cross_entropy
 optimizer = SGD(
@@ -150,27 +181,6 @@ scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
 
-def get_result(loaders, model, phase, loss_scaling=1000.0):
-    time_ep = time.time()
-    res = utils.run_epoch(loaders[phase], model, criterion,
-                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
-    time_pass = time.time() - time_ep
-    res['time_pass'] = time_pass
-    return res
-
-if args.evaluate is not None:
-    model_dict = torch.load(args.evaluate).cuda()
-    model.load_state_dict(model_dict)
-    # update TD gamma and alpha value if needed
-    for m in model.modules():
-        if hasattr(m, 'gamma'):
-            m.gamma = args.TD_gamma
-            m.alpha = args.TD_alpha
-    print(model)
-    test_res = get_result(loaders, model, "test", loss_scaling)
-    print("test accuracy = %.3f%%" % test_res['accuracy'])
-    exit()
-
 for epoch in range(args.epochs):
 
     scheduler.step()
@@ -183,4 +193,7 @@ for epoch in range(args.epochs):
     utils.print_table(values, columns, epoch, logger)
 
 if args.save_file is not None:
-    torch.save(model.state_dict(),  os.path.join('checkpoint', args.save_file))
+    torch.save({
+        'state_dict': model.state_dict(),
+        'args': args}, 
+        os.path.join('checkpoint', args.save_file))
