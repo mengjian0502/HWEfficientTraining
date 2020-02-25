@@ -94,7 +94,6 @@ if 'LP' in args.model:
                                            number))
         quantizers[num] = quantizer(forward_number=number, forward_rounding=num_rounding)
 # Build model
-logger.info('Model: {}'.format(args.model))
 model_cfg = getattr(models, args.model)
 if 'LP' in args.model:
     activate_number = FloatingPoint(exp=args.activate_exp, man=args.activate_man)
@@ -111,6 +110,7 @@ if 'TD' in args.model:
     model_cfg.kwargs.update({"gamma":args.TD_gamma, "alpha":args.TD_alpha, "block_size":args.block_size})
 
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
+logger.info('Model: {}'.format(model))
 model.cuda()
 
 criterion = F.cross_entropy
