@@ -156,7 +156,8 @@ def get_result(loaders, model, phase, loss_scaling=1000.0):
     return res
 
 if args.evaluate is not None:
-    model = torch.load(args.evaluate).cuda()
+    model_dict = torch.load(args.evaluate).cuda()
+    model.load_state_dict(model_dict)
     # update TD gamma and alpha value if needed
     for m in model.modules():
         if hasattr(m, 'gamma'):
@@ -179,4 +180,4 @@ for epoch in range(args.epochs):
     utils.print_table(values, columns, epoch, logger)
 
 if args.save_file is not None:
-    torch.save(model,  os.path.join('checkpoint', args.save_file))
+    torch.save(model.state_dict(),  os.path.join('checkpoint', args.save_file))
