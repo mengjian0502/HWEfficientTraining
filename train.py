@@ -79,6 +79,7 @@ logger.root.setLevel(0)
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.deterministic = True
 
 loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio, args.num_workers)
 if args.dataset=="CIFAR10": num_classes=10
