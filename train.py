@@ -99,10 +99,12 @@ if args.evaluate is not None:
     # replace certain args with saved args
     saved_args = checkpoint['args']
     for num in num_types:
-        setattr(args, '{}-man'.format(num), getattr(saved_args, '{}-man'.format(num)))
-        setattr(args, '{}-exp'.format(num), getattr(saved_args, '{}-exp'.format(num)))
-        setattr(args, '{}-rounding'.format(num), getattr(saved_args, '{}-rounding'.format(num)))
+        setattr(args, '{}_man'.format(num), getattr(saved_args, '{}_man'.format(num)))
+        setattr(args, '{}_exp'.format(num), getattr(saved_args, '{}_exp'.format(num)))
+        setattr(args, '{}_rounding'.format(num), getattr(saved_args, '{}_rounding'.format(num)))
     args.block_size = saved_args.block_size
+    args.model = saved_args.model
+    args.TD_alpha = 1
 
 
 if 'LP' in args.model:
@@ -134,19 +136,6 @@ if 'TD' in args.model:
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
 logger.info('Model: {}'.format(model))
 model.cuda()
-
-if args.evaluate is not None:
-    model.load_state_dict(checkpoint['state_dict'])
-    # update TD gamma and alpha value if needed
-    for m in model.modules():
-        if hasattr(m, 'gamma'):
-            m.gamma = args.TD_gamma
-            m.alpha = args.TD_alpha
-    print(model)
-    test_res = get_result(loaders, model, "test", loss_scaling)
-    print("test accuracy = %.3f%%" % test_res['accuracy'])
-    exit()
-
 criterion = F.cross_entropy
 optimizer = SGD(
    model.parameters(),
@@ -155,6 +144,7 @@ optimizer = SGD(
    weight_decay=args.wd,
 )
 loss_scaling = 1.0
+
 if 'LP' in args.model:
     loss_scaling = 1000.0
     optimizer = OptimLP(optimizer,
@@ -164,6 +154,18 @@ if 'LP' in args.model:
                         acc_quant=quantizers["acc"],
                         grad_scaling=1/loss_scaling # scaling down the gradient
     )
+
+if args.evaluate is not None:
+    model.load_state_dict(checkpoint['state_dict'])
+    # update TD gamma and alpha value if needed
+    for m in model.modules():
+        if hasattr(m, 'gamma'):
+            m.gamma = args.TD_gamma
+            m.alpha = args.TD_alpha
+    print(model)
+    test_res = get_result(loaders, model, "test", loss_scaling=1)
+    print("test accuracy = %.3f%%" % test_res['accuracy'])
+    exit()
 
 def schedule(epoch):
     t = (epoch) / args.epochs
