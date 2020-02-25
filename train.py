@@ -17,6 +17,7 @@ from qtorch import BlockFloatingPoint, FixedPoint, FloatingPoint
 from qtorch.quant import quantizer, Quantizer
 import logging
 torch.manual_seed(0)
+np.random.seed(0)
 
 num_types = ["weight", "activate", "grad", "error", "momentum", "acc"]
 
