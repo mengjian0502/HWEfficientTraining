@@ -9,7 +9,7 @@ import math
 from .td import Conv2d_TD, Linear_TD
 
 
-__all__ = ['PreResNet110', 'PreResNet20']
+__all__ = ['PreResNet110_TD', 'PreResNet20_TD']
 
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -149,7 +149,7 @@ class PreResNet(nn.Module):
         return x
 
 
-class PreResNet110:
+class PreResNet110_TD:
     base = PreResNet
     args = list()
     kwargs = {'depth': 110}
@@ -165,7 +165,7 @@ class PreResNet110:
     ])
 
 
-class PreResNet20:
+class PreResNet20_TD:
     base = PreResNet
     args = list()
     kwargs = {'depth': 20}
