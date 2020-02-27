@@ -187,10 +187,10 @@ columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_
 
 for epoch in range(args.epochs):
 
-    scheduler.step()
     time_ep = time.time()
     train_res = get_result(loaders, model, "train", loss_scaling)
     test_res = get_result(loaders, model, "test", loss_scaling)
+    scheduler.step()
 
     values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
 
