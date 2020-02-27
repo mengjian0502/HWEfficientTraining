@@ -2,8 +2,10 @@
 block_size=${1:-16}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-log_name="./logs/VGG16_FP32_TD_${block_size}_${gamma}_${alpha}.log" 
-save_file_name="VGG16_FP32_TD_${block_size}_${gamma}_${alpha}.pth" 
+gamma_final=${4:--1.0}
+alpha_final=${5:--1.0}
+log_name="./logs/VGG16_FP32_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
+save_file_name="VGG16_FP32_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -13,6 +15,8 @@ python train.py --dataset CIFAR10 \
                 --block_size $block_size \
                 --TD_gamma $gamma \
                 --TD_alpha $alpha \
+                --TD_gamma_final $gamma_final \
+                --TD_alpha_final $alpha_final \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \

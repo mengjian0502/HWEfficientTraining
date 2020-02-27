@@ -57,6 +57,10 @@ parser.add_argument('--block_size', type=int, default=16,
                     help='block size for dropout')
 parser.add_argument('--evaluate', type=str, default=None,
                     help='model file for accuracy evaluation')
+parser.add_argument('--TD_gamma_final', type=float, default=-1.0,
+                    help='final gamma value for targeted dropout')
+parser.add_argument('--TD_alpha_final', type=float, default=-1.0,
+                    help='final alpha value for targeted dropout')
 
 
 for num in num_types:
@@ -181,19 +185,38 @@ def schedule(epoch):
 
     return factor
 
+def update_gamma_alpha(epoch):
+    if args.TD_gamma_final > 0:
+        TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
+        for m in model.modules():
+            if hasattr(m, 'TD_gamma'):
+                m.TD_gamma = TD_gamma
+    else:
+        TD_gamma = args.TD_gamma
+    if args.TD_alpha_final > 0:
+        TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_alpha_final - args.TD_alpha)
+        for m in model.modules():
+            if hasattr(m, 'TD_alpha'):
+                m.TD_alpha = TD_alpha
+    else:
+        TD_alpha = args.TD_alpha
+    return TD_gamma, TD_alpha
+
 scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
-
+if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
+    columns += ['gamma', 'alpha']
+    
 for epoch in range(args.epochs):
-
     time_ep = time.time()
+    TD_gamma, TD_alpha = update_gamma_alpha(epoch)
     train_res = get_result(loaders, model, "train", loss_scaling)
     test_res = get_result(loaders, model, "test", loss_scaling)
     scheduler.step()
-
     values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
-
+    if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
+        values += [TD_gamma, TD_alpha]
     utils.print_table(values, columns, epoch, logger)
 
 if args.save_file is not None:
