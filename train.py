@@ -189,15 +189,15 @@ def update_gamma_alpha(epoch):
     if args.TD_gamma_final > 0:
         TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
         for m in model.modules():
-            if hasattr(m, 'TD_gamma'):
-                m.TD_gamma = TD_gamma
+            if hasattr(m, 'gamma'):
+                m.gamma = TD_gamma
     else:
         TD_gamma = args.TD_gamma
     if args.TD_alpha_final > 0:
         TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_alpha_final - args.TD_alpha)
         for m in model.modules():
-            if hasattr(m, 'TD_alpha'):
-                m.TD_alpha = TD_alpha
+            if hasattr(m, 'alpha'):
+                m.alpha = TD_alpha
     else:
         TD_alpha = args.TD_alpha
     return TD_gamma, TD_alpha
