@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import utils
 import tabulate
@@ -125,6 +126,7 @@ if 'LP' in args.model:
     logger.info("activation: {}, {}".format(args.activate_rounding, activate_number))
     logger.info("error: {}, {}".format(args.error_rounding, error_number))
     make_quant = lambda : Quantizer(activate_number, error_number, args.activate_rounding, args.error_rounding)
+    #make_quant = nn.Identity
     model_cfg.kwargs.update({"quant":make_quant})
 
 if 'TD' in args.model:

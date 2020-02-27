@@ -25,9 +25,10 @@ class Conv2d_TD(nn.Conv2d):
                 mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
                 mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
                 mask_keep = 1.0 - mask_small * mask_dropout
-                mask_keep_original = F.interpolate(mask_keep, 
+                self.mask_keep_original = F.interpolate(mask_keep, 
                                     scale_factor=(self.block_size, self.block_size)).permute(2,3,0,1)
-            out = F.conv2d(input, self.weight * mask_keep_original, None, self.stride, self.padding,
+                #scale_factor = self.weight.abs().mean() / (self.weight * self.mask_keep_original).abs().mean()
+            out = F.conv2d(input, self.weight * self.mask_keep_original, None, self.stride, self.padding,
                                         self.dilation, self.groups)
         else:
             out = F.conv2d(input, self.weight, None, self.stride, self.padding,
@@ -60,9 +61,10 @@ class Linear_TD(nn.Linear):
                 mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
                 mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
                 mask_keep = 1.0 - mask_small * mask_dropout
-                mask_keep_original = F.interpolate(mask_keep.unsqueeze(0), 
+                self.mask_keep_original = F.interpolate(mask_keep.unsqueeze(0), 
                                     scale_factor=(self.block_size, self.block_size)).squeeze()
-            return F.linear(input, self.weight * mask_keep_original, self.bias)
+                #scale_factor = self.weight.abs().mean() / (self.weight * self.mask_keep_original).abs().mean()
+            return F.linear(input, self.weight * self.mask_keep_original, self.bias)
         else:
             return F.linear(input, self.weight, self.bias)
 

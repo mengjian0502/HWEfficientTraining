@@ -12,18 +12,37 @@ class Hook_record_input():
 
     def close(self):
         self.hook.remove()
+
+class Hook_record_grad():
+    def __init__(self, module):
+        self.hook = module.register_backward_hook(self.hook_fn)
+
+    def hook_fn(self, module, grad_input, grad_output):
+        self.grad_input = grad_input
+
+    def close(self):
+        self.hook.remove()
         
 def add_input_record_Hook(model, name_as_key=False):
     Hooks = {}
     if name_as_key:
         for name,module in model.named_modules():
-            #if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
             Hooks[name] = Hook_record_input(module)
             
     else:
         for k,module in enumerate(model.modules()):
-            #if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
             Hooks[k] = Hook_record_input(module)
+    return Hooks
+
+def add_grad_record_Hook(model, name_as_key=False):
+    Hooks = {}
+    if name_as_key:
+        for name,module in model.named_modules():
+            Hooks[name] = Hook_record_grad(module)
+            
+    else:
+        for k,module in enumerate(model.modules()):
+            Hooks[k] = Hook_record_grad(module)
     return Hooks
 
 def remove_hooks(Hooks):
@@ -54,7 +73,8 @@ def run_epoch(loader, model, criterion, optimizer=None,
     elif phase=="val" or phase=="test": model.eval()
 
     ttl = 0
-    Hooks = add_input_record_Hook(model)
+    #Hooks = add_input_record_Hook(model)
+    #Hooks_grad = add_grad_record_Hook(model)
     with torch.autograd.set_grad_enabled(phase=="train"):
         for i, (input, target) in enumerate(loader):
             input = input.cuda()
