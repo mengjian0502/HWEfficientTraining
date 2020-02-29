@@ -1,4 +1,5 @@
 #!/bin/bash
+
 block_size=${1:-16}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
