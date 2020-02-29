@@ -1,11 +1,11 @@
 #!/bin/bash
-block_size=${1:-16}
-gamma=${2:-0.0}
-alpha=${3:-0.0}
+block_size=${1:-8}
+gamma=${2:-0.5}
+alpha=${3:-0.5}
 log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}.log" 
 save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}.pth" 
 
-python train.py --dataset CIFAR10 \
+python3 train.py --dataset CIFAR10 \
                 --data_path ./data \
                 --model PreResNet20_TD \
                 --log_file $log_name \
