@@ -1,7 +1,14 @@
 #!/bin/bash
+<<<<<<< HEAD
 block_size=${1:-8}
 gamma=${2:-0.5}
 alpha=${3:-0.5}
+=======
+
+block_size=${1:-16}
+gamma=${2:-0.0}
+alpha=${3:-0.0}
+>>>>>>> cf3fabfce4fd5752a14bdca4860bd51cd3046fad
 log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}.log" 
 save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}.pth" 
 
