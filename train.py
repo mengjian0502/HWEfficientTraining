@@ -64,6 +64,10 @@ for num in num_types:
                         help='rounding method for {}, stochastic or nearest'.format(num))
 
 args = parser.parse_args()
+
+torch.cuda.set_device(0)
+print(f'Current cuda device {torch.cuda.current_device()}')
+
 logger = logging.getLogger('training')
 if args.log_file is not None:
     fileHandler = logging.FileHandler(args.log_file)
