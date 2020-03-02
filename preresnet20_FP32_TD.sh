@@ -1,10 +1,12 @@
 #!/bin/bash
 block_size=${1:-16}
-gamma=${2:-0.5}
-alpha=${3:-0.5}
+gamma=${2:-0.0}
+alpha=${3:-0.0}
+gamma_final=${4:--1.0}
+alpha_final=${5:--1.0}
 
-log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}.log" 
-save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}.pth" 
+log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp.log" 
+save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp.pth" 
 
 python3 train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -14,6 +16,8 @@ python3 train.py --dataset CIFAR10 \
                 --block_size $block_size \
                 --TD_gamma $gamma \
                 --TD_alpha $alpha \
+                --TD_gamma_final $gamma_final \
+                --TD_alpha_final $alpha_final \
                 --epochs=200 \
                 --lr_init=0.1 \
                 --wd=5e-4 \
