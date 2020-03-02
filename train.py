@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import utils
 import tabulate
@@ -16,29 +17,31 @@ from torch.optim import SGD
 from qtorch import BlockFloatingPoint, FixedPoint, FloatingPoint
 from qtorch.quant import quantizer, Quantizer
 import logging
+torch.manual_seed(0)
+np.random.seed(0)
 
 num_types = ["weight", "activate", "grad", "error", "momentum", "acc"]
 
 parser = argparse.ArgumentParser(description='SGD/SWA training')
 parser.add_argument('--dataset', type=str, default='CIFAR10',
                     help='dataset name: CIFAR10 or IMAGENET12')
-parser.add_argument('--data_path', type=str, default="./data", required=True, metavar='PATH',
+parser.add_argument('--data_path', type=str, default="./data",
                     help='path to datasets location (default: "./data")')
-parser.add_argument('--batch_size', type=int, default=128, metavar='N',
+parser.add_argument('--batch_size', type=int, default=128,
                     help='input batch size (default: 128)')
-parser.add_argument('--val_ratio', type=float, default=0.0, metavar='N',
+parser.add_argument('--val_ratio', type=float, default=0.0,
                     help='Ratio of the validation set (default: 0.0)')
-parser.add_argument('--num_workers', type=int, default=4, metavar='N',
+parser.add_argument('--num_workers', type=int, default=4, 
                     help='number of workers (default: 4)')
-parser.add_argument('--model', type=str, default=None, required=True, metavar='MODEL',
+parser.add_argument('--model', type=str, default='VGG16',
                     help='model name (default: None)')
-parser.add_argument('--resume', type=str, default=None, metavar='CKPT',
+parser.add_argument('--resume', type=str, default=None, 
                     help='checkpoint to resume training from (default: None)')
-parser.add_argument('--epochs', type=int, default=200, metavar='N',
+parser.add_argument('--epochs', type=int, default=200, 
                     help='number of epochs to train (default: 200)')
-parser.add_argument('--lr_init', type=float, default=0.01, metavar='LR',
+parser.add_argument('--lr_init', type=float, default=0.01,
                     help='initial learning rate (default: 0.01)')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
+parser.add_argument('--momentum', type=float, default=0.9,
                     help='SGD momentum (default: 0.9)')
 parser.add_argument('--wd', type=float, default=1e-4,
                     help='weight decay (default: 1e-4)')
@@ -52,6 +55,12 @@ parser.add_argument('--TD_alpha', type=float, default=0.0,
                     help='alpha value for targeted dropout')
 parser.add_argument('--block_size', type=int, default=16,
                     help='block size for dropout')
+parser.add_argument('--evaluate', type=str, default=None,
+                    help='model file for accuracy evaluation')
+parser.add_argument('--TD_gamma_final', type=float, default=-1.0,
+                    help='final gamma value for targeted dropout')
+parser.add_argument('--TD_alpha_final', type=float, default=-1.0,
+                    help='final alpha value for targeted dropout')
 
 
 for num in num_types:
@@ -80,10 +89,32 @@ logger.root.setLevel(0)
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
+torch.backends.cudnn.deterministic = True
 
 loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio, args.num_workers)
 if args.dataset=="CIFAR10": num_classes=10
 elif args.dataset=="IMAGENET12": num_classes=1000
+
+def get_result(loaders, model, phase, loss_scaling=1000.0):
+    time_ep = time.time()
+    res = utils.run_epoch(loaders[phase], model, criterion,
+                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
+    time_pass = time.time() - time_ep
+    res['time_pass'] = time_pass
+    return res
+
+if args.evaluate is not None:
+    checkpoint = torch.load(args.evaluate)
+    # replace certain args with saved args
+    saved_args = checkpoint['args']
+    for num in num_types:
+        setattr(args, '{}_man'.format(num), getattr(saved_args, '{}_man'.format(num)))
+        setattr(args, '{}_exp'.format(num), getattr(saved_args, '{}_exp'.format(num)))
+        setattr(args, '{}_rounding'.format(num), getattr(saved_args, '{}_rounding'.format(num)))
+    args.block_size = saved_args.block_size
+    args.model = saved_args.model
+    args.TD_alpha = 1
+
 
 if 'LP' in args.model:
     quantizers = {}
@@ -96,7 +127,6 @@ if 'LP' in args.model:
                                            number))
         quantizers[num] = quantizer(forward_number=number, forward_rounding=num_rounding)
 # Build model
-logger.info('Model: {}'.format(args.model))
 model_cfg = getattr(models, args.model)
 if 'LP' in args.model:
     activate_number = FloatingPoint(exp=args.activate_exp, man=args.activate_man)
@@ -104,6 +134,7 @@ if 'LP' in args.model:
     logger.info("activation: {}, {}".format(args.activate_rounding, activate_number))
     logger.info("error: {}, {}".format(args.error_rounding, error_number))
     make_quant = lambda : Quantizer(activate_number, error_number, args.activate_rounding, args.error_rounding)
+    #make_quant = nn.Identity
     model_cfg.kwargs.update({"quant":make_quant})
 
 if 'TD' in args.model:
@@ -113,8 +144,8 @@ if 'TD' in args.model:
     model_cfg.kwargs.update({"gamma":args.TD_gamma, "alpha":args.TD_alpha, "block_size":args.block_size})
 
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
+logger.info('Model: {}'.format(model))
 model.cuda()
-
 criterion = F.cross_entropy
 optimizer = SGD(
    model.parameters(),
@@ -123,6 +154,7 @@ optimizer = SGD(
    weight_decay=args.wd,
 )
 loss_scaling = 1.0
+
 if 'LP' in args.model:
     loss_scaling = 1000.0
     optimizer = OptimLP(optimizer,
@@ -132,6 +164,18 @@ if 'LP' in args.model:
                         acc_quant=quantizers["acc"],
                         grad_scaling=1/loss_scaling # scaling down the gradient
     )
+
+if args.evaluate is not None:
+    model.load_state_dict(checkpoint['state_dict'])
+    # update TD gamma and alpha value if needed
+    for m in model.modules():
+        if hasattr(m, 'gamma'):
+            m.gamma = args.TD_gamma
+            m.alpha = args.TD_alpha
+    print(model)
+    test_res = get_result(loaders, model, "test", loss_scaling=1)
+    print("test accuracy = %.3f%%" % test_res['accuracy'])
+    exit()
 
 def schedule(epoch):
     t = (epoch) / args.epochs
@@ -145,28 +189,42 @@ def schedule(epoch):
 
     return factor
 
+def update_gamma_alpha(epoch):
+    if args.TD_gamma_final > 0:
+        TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
+        for m in model.modules():
+            if hasattr(m, 'gamma'):
+                m.gamma = TD_gamma
+    else:
+        TD_gamma = args.TD_gamma
+    if args.TD_alpha_final > 0:
+        TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_alpha_final - args.TD_alpha)
+        for m in model.modules():
+            if hasattr(m, 'alpha'):
+                m.alpha = TD_alpha
+    else:
+        TD_alpha = args.TD_alpha
+    return TD_gamma, TD_alpha
+
 scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
-
-def get_result(loaders, model, phase, loss_scaling=1000.0):
-    time_ep = time.time()
-    res = utils.run_epoch(loaders[phase], model, criterion,
-                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
-    time_pass = time.time() - time_ep
-    res['time_pass'] = time_pass
-    return res
-
+if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
+    columns += ['gamma', 'alpha']
+    
 for epoch in range(args.epochs):
-
-    scheduler.step()
     time_ep = time.time()
+    TD_gamma, TD_alpha = update_gamma_alpha(epoch)
     train_res = get_result(loaders, model, "train", loss_scaling)
     test_res = get_result(loaders, model, "test", loss_scaling)
-
+    scheduler.step()
     values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
-
+    if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
+        values += [TD_gamma, TD_alpha]
     utils.print_table(values, columns, epoch, logger)
 
 if args.save_file is not None:
-    torch.save(model,  os.path.join('checkpoint', args.save_file))
+    torch.save({
+        'state_dict': model.state_dict(),
+        'args': args}, 
+        os.path.join('checkpoint', args.save_file))

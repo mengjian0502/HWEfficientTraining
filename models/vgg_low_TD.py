@@ -23,7 +23,7 @@ def make_layers(cfg, quant, batch_norm=False, gamma=0.5, alpha=0.5, block_size=1
         else:
             use_quant = v[-1] != 'N'
             filters = int(v) if use_quant else int(v[:-1])
-            if in_channels == 3:
+            if in_channels == 3: # or gamma == 0 or alpha == 0:
                 conv2d = nn.Conv2d(in_channels, filters, kernel_size=3, padding=1)
             else:
                 conv2d = Conv2d_TD(in_channels, filters, kernel_size=3, padding=1, gamma=gamma, 
