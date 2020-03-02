@@ -5,7 +5,7 @@ save_file_name="preresnet20_FP32_TD_bl.pth"
 
 python3 train.py --dataset CIFAR10 \
                 --data_path ./data \
-                --model PreResNet20_TD \
+                --model PreResNet20 \
                 --log_file $log_name \
                 --save_file $save_file_name \
                 --epochs=200 \
