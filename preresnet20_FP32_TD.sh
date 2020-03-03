@@ -1,9 +1,9 @@
 #!/bin/bash
-block_size=${1:-16}
+block_size=${1:-4}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:--1.0}
-alpha_final=${5:--1.0}
+gamma_final=${4:-0.75}
+alpha_final=${5:-0.99}
 
 log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp.log" 
 save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp.pth" 
