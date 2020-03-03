@@ -5,8 +5,8 @@ alpha=${3:-0.0}
 gamma_final=${4:-0.75}
 alpha_final=${5:-0.99}
 
-log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp.log" 
-save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp.pth" 
+log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.log" 
+save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.pth" 
 
 python3 train.py --dataset CIFAR10 \
                 --data_path ./data \
