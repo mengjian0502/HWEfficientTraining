@@ -56,7 +56,7 @@ class Conv2d_col_TD(nn.Conv2d):
         if self.gamma > 0 and self.alpha > 0:
             with torch.no_grad():
                 num_group = self.weight.size(0) * self.weight.size(1) // self.block_size
-                weights_2d = self.weight.view(num_group, self.block_size*self.weight.size(2)*self.weight.size(3))  # reshape the 4-D tensor to 2-D
+                weights_2d = self.weight.view(num_group, self.block_size*self.weight.size(2)*self.weight.size(3))   # reshape the 4-D tensor to 2-D
 
                 grp_values = weights_2d.norm(p=2, dim=1)                                                            # compute the 2-norm of the 2-D matrix
                 sorted_col, _ = torch.sort(grp_values.contiguous().view(-1), dim=0)

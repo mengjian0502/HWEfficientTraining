@@ -101,6 +101,9 @@ class PreResNet(nn.Module):
         n = (depth - 2) // 6
 
         block = Bottleneck if depth >= 44 else BasicBlock
+        self.gamma = gamma
+        self.alpha = alpha
+        self.block_size = block_size
 
         self.inplanes = 16
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
@@ -133,7 +136,7 @@ class PreResNet(nn.Module):
         layers.append(block(self.inplanes, planes, stride, downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes))
+            layers.append(block(self.inplanes, planes, gamma=self.gamma, alpha=self.alpha, block_size=self.block_size))
 
         return nn.Sequential(*layers)
 
