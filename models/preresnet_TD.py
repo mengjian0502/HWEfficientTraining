@@ -28,7 +28,8 @@ class BasicBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(inplanes)
         self.relu = nn.ReLU(inplace=True)
         # self.conv1 = conv3x3(inplanes, planes, stride)
-        self.conv1 = conv3x3_td(inplanes, planes, stride,gamma=gamma, alpha=alpha, block_size=block_size)
+        self.conv1 = conv3x3_td(inplanes, planes, stride, gamma=gamma, alpha=alpha, block_size=block_size)
+        self.bn2 = nn.BatchNorm2d(planes)
         # self.conv2 = conv3x3(planes, planes)
         self.conv2 = conv3x3_td(planes, planes, gamma=gamma, alpha=alpha, block_size=block_size)
         self.downsample = downsample
@@ -100,16 +101,13 @@ class PreResNet(nn.Module):
         n = (depth - 2) // 6
 
         block = Bottleneck if depth >= 44 else BasicBlock
-        self.gamma = gamma
-        self.alpha = alpha
-        self.block_size = block_size
 
         self.inplanes = 16
         self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1,
                                bias=False)
-        self.layer1 = self._make_layer(block, 16, n)
-        self.layer2 = self._make_layer(block, 32, n, stride=2)
-        self.layer3 = self._make_layer(block, 64, n, stride=2)
+        self.layer1 = self._make_layer(block, 16, n, gamma=gamma, alpha=alpha, block_size=block_size)
+        self.layer2 = self._make_layer(block, 32, n, stride=2, gamma=gamma, alpha=alpha, block_size=block_size)
+        self.layer3 = self._make_layer(block, 64, n, stride=2, gamma=gamma, alpha=alpha, block_size=block_size)
         self.bn = nn.BatchNorm2d(64 * block.expansion)
         self.relu = nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(8)
@@ -123,7 +121,7 @@ class PreResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layer(self, block, planes, blocks, stride=1):
+    def _make_layer(self, block, planes, blocks, stride=1, gamma=0.5, alpha=0.5, block_size=16):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -135,7 +133,7 @@ class PreResNet(nn.Module):
         layers.append(block(self.inplanes, planes, stride, downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes, gamma=self.gamma, alpha=self.alpha, block_size=self.block_size))
+            layers.append(block(self.inplanes, planes, gamma=gamma, alpha=alpha, block_size=block_size))
 
         return nn.Sequential(*layers)
 
