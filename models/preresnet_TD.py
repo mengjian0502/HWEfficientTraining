@@ -130,7 +130,7 @@ class PreResNet(nn.Module):
             )
 
         layers = list()
-        layers.append(block(self.inplanes, planes, stride, downsample))
+        layers.append(block(self.inplanes, planes, stride, downsample, gamma=gamma, alpha=alpha, block_size=block_size))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
             layers.append(block(self.inplanes, planes, gamma=gamma, alpha=alpha, block_size=block_size))
