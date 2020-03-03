@@ -42,40 +42,42 @@ class Conv2d_TD(nn.Conv2d):
         return super(Conv2d_TD, self).extra_repr() + ', gamma={}, alpha={}, block_size={}'.format(
                 self.gamma, self.alpha, self.block_size)
 
-# class Conv2d_col_TD(nn.Conv2d):
-#     def __init__(self, in_channels, out_channels, kernel_size, stride=1, 
-#                  padding=0, dilation=1, groups=1, bias=True, gamma=0.0, alpha=0.0, block_size=16):
-#         super(Conv2d_col_TD, self).__init__(in_channels, out_channels, kernel_size,
-#                 stride=stride, padding=padding, dilation=dilation, groups=groups,
-#                 bias=bias)
-#         self.gamma = gamma
-#         self.alpha = alpha
-#         self.block_size = block_size
-
-#     def forward(self, input):
-#         w_l = self.weight
-#         num_group = w_l.size(0) * w_l.size(1) // self.block_size
-#         w_i = w_l.view(self.block_size * w_l.size(2) * w_l.size(3), num_group)  # reshape the weight tensor into 2-D matrix
+class Conv2d_col_TD(nn.Conv2d):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, 
+                 padding=0, dilation=1, groups=1, bias=True, gamma=0.0, alpha=0.0, block_size=16):
+        super(Conv2d_col_TD, self).__init__(in_channels, out_channels, kernel_size,
+                stride=stride, padding=padding, dilation=dilation, groups=groups,
+                bias=bias)
+        self.gamma = gamma
+        self.alpha = alpha
+        self.block_size = block_size
     
-#         w_norm = w_i.norm(p=2, dim=0)
-#         sorted_col, indices = torch.sort(w_norm.contiguous().view(-1), dim=0)
-#         th_idx = int(w_norm.numel() * self.gamma)
-#         threshold = sorted_col[th_idx]
+    def forward(self, input):
+        if self.gamma > 0 and self.alpha > 0:
+            with torch.no_grad():
+                num_group = self.weight.size(0) * self.weight.size(1) // self.block_size
+                weights_2d = self.weight.view(num_group, self.block_size*self.weight.size(2)*self.weight.size(3))  # reshape the 4-D tensor to 2-D
+
+                grp_values = weights_2d.norm(p=2, dim=1)                                                            # compute the 2-norm of the 2-D matrix
+                sorted_col, _ = torch.sort(grp_values.contiguous().view(-1), dim=0)
+
+                th_idx = int(grp_values.numel() * self.gamma)
+                threshold = sorted_col[th_idx]
+                mask_small = 1 - grp_values.gt(threshold).float() # mask for blocks candidates for pruning
+                mask_dropout = torch.rand_like(grp_values).lt(self.alpha).float()
     
-
-#         mask_small = 1 - w_norm.gt(threshold).float()
-#         mask_dropout = torch.rand_like(w_norm).lt(self.alpha).float()
-#         mask_keep = 1 - mask_small * mask_dropout
+                mask_keep = 1 - mask_small * mask_dropout
     
-#         mask_keep_2d = mask_keep.expand(w_i.size())
-#         mask_keep_original = mask_keep_2d.resize_(w_l.size())
-
-#         out = F.conv2d(input, self.weight * mask_keep_original, None, self.stride, self.padding,
-#                                     self.dilation, self.groups)
-#         if not self.bias is None:
-#             out += self.bias.view(1, -1, 1, 1).expand_as(out)
-
-#         return out
+                mask_keep_2d = mask_keep.view(weights_2d.size(0),1).expand(weights_2d.size()) 
+                self.mask_keep_orignal = mask_keep_2d.clone().resize_as_(self.weight)
+            out = F.conv2d(input, self.weight * self.mask_keep_original, None, self.stride, self.padding,
+                                        self.dilation, self.groups)
+        else:
+            out = F.conv2d(input, self.weight, None, self.stride, self.padding,
+                                        self.dilation, self.groups)
+        if not self.bias is None:
+            out += self.bias.view(1, -1, 1, 1).expand_as(out)
+        return out
 
 class Linear_TD(nn.Linear):
     def __init__(self, in_features, out_features, bias=True, gamma=0.0, alpha=0.0, block_size=16):
