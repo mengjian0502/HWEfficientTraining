@@ -1,3 +1,6 @@
+# FP8 training
+
+The FP8 training scheme is forked from QPytorch
 # IBM8.pytorch
 
 QPyTorch simulation for the NeurIPS 2018 paper, [Training Deep Neural Networks with 8-bit Floating
