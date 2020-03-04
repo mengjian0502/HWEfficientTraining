@@ -1,12 +1,12 @@
 #!/bin/bash
-block_size=${1:-4}
+block_size=${1:-2}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:-0.75}
+gamma_final=${4:-0.875}
 alpha_final=${5:-0.99}
 
-log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.log" 
-save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.pth" 
+log_name="./logs/preresnet20_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.log" 
+save_file_name="preresnet20_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.pth" 
 
 python3 train.py --dataset CIFAR10 \
                 --data_path ./data \

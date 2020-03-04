@@ -1,10 +1,12 @@
 #!/bin/bash
-block_size=${1:-4}
-gamma=${2:-0.5}
+block_size=${1:-2}
+gamma=${2:-0.75}
 alpha=${3:-1.0}
 
 log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_eval.log" 
 save_file_name="preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_eval.pth" 
+
+eval_path="./checkpoint/preresnet20_FP32_col_TD_${block_size}_0.0_0.0_ramp_${gamma}_0.99.pth"
 
 python3 train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -18,7 +20,7 @@ python3 train.py --dataset CIFAR10 \
                 --lr_init=0.1 \
                 --wd=5e-4 \
                 --weight-man 2 \
-                --evaluate \
+                --evaluate $eval_path \
                 --grad-man 2 \
                 --momentum-man 9 \
                 --activate-man 2 \

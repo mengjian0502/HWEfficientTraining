@@ -69,7 +69,7 @@ class Conv2d_col_TD(nn.Conv2d):
                 mask_keep = 1 - mask_small * mask_dropout
     
                 mask_keep_2d = mask_keep.view(weights_2d.size(0),1).expand(weights_2d.size()) 
-                self.mask_keep_orignal = mask_keep_2d.clone().resize_as_(self.weight)
+                self.mask_keep_original = mask_keep_2d.clone().resize_as_(self.weight)
             out = F.conv2d(input, self.weight * self.mask_keep_original, None, self.stride, self.padding,
                                         self.dilation, self.groups)
         else:
@@ -78,6 +78,9 @@ class Conv2d_col_TD(nn.Conv2d):
         if not self.bias is None:
             out += self.bias.view(1, -1, 1, 1).expand_as(out)
         return out
+    def extra_repr(self):
+        return super(Conv2d_col_TD, self).extra_repr() + ', gamma={}, alpha={}, block_size={}'.format(
+                self.gamma, self.alpha, self.block_size)
 
 class Linear_TD(nn.Linear):
     def __init__(self, in_features, out_features, bias=True, gamma=0.0, alpha=0.0, block_size=16):

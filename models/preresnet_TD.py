@@ -6,7 +6,7 @@
 import torch.nn as nn
 import torchvision.transforms as transforms
 import math
-from .td import Conv2d_TD, Linear_TD
+from .td import Conv2d_TD, Linear_TD, Conv2d_col_TD
 
 
 __all__ = ['PreResNet110_TD', 'PreResNet20_TD']
@@ -17,8 +17,10 @@ def conv3x3(in_planes, out_planes, stride=1):
                      padding=1, bias=False)
 
 def conv3x3_td(in_planes, out_planes, stride=1, gamma=0.5, alpha=0.5, block_size=16):
-    return Conv2d_TD(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size)
+    # return Conv2d_TD(in_planes, out_planes, kernel_size=3, stride=stride,
+    #                  padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size)
+    return Conv2d_col_TD(in_planes, out_planes, kernel_size=3, stride=stride,
+                      padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size)
 
 class BasicBlock(nn.Module):
     expansion = 1
