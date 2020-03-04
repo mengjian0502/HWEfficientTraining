@@ -1,22 +1,8 @@
-#!/bin/bash
-block_size=${1:-16}
-gamma=${2:-0.0}
-alpha=${3:-0.0}
-gamma_final=${4:--1.0}
-alpha_final=${5:--1.0}
-log_name="./logs/VGG16_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
-save_file_name="VGG16_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
-
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
-                --model VGG16LP_TD \
-                --log_file $log_name \
-                --save_file $save_file_name \
-                --block_size $block_size \
-                --TD_gamma $gamma \
-                --TD_alpha $alpha \
-                --TD_gamma_final $gamma_final \
-                --TD_alpha_final $alpha_final \
+                --model PreResNet20LP \
+                --log_file './logs/PreResNet20_FP8.log' \
+                --save_file 'PreResNet20_FP8.pth' \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \
