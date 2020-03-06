@@ -61,6 +61,8 @@ parser.add_argument('--TD_gamma_final', type=float, default=-1.0,
                     help='final gamma value for targeted dropout')
 parser.add_argument('--TD_alpha_final', type=float, default=-1.0,
                     help='final alpha value for targeted dropout')
+parser.add_argument('--ramping_power', type=float, default=3.0,
+                    help='power of ramping schedule')
 
 
 for num in num_types:
@@ -187,14 +189,14 @@ def schedule(epoch):
 
 def update_gamma_alpha(epoch):
     if args.TD_gamma_final > 0:
-        TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
+        TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** args.ramping_power) * (args.TD_gamma_final - args.TD_gamma)
         for m in model.modules():
             if hasattr(m, 'gamma'):
                 m.gamma = TD_gamma
     else:
         TD_gamma = args.TD_gamma
     if args.TD_alpha_final > 0:
-        TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_alpha_final - args.TD_alpha)
+        TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** args.ramping_power) * (args.TD_alpha_final - args.TD_alpha)
         for m in model.modules():
             if hasattr(m, 'alpha'):
                 m.alpha = TD_alpha

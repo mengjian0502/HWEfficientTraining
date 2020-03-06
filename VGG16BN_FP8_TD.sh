@@ -4,8 +4,9 @@ gamma=${2:-0.0}
 alpha=${3:-0.0}
 gamma_final=${4:--1.0}
 alpha_final=${5:--1.0}
-log_name="./logs/VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
-save_file_name="VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
+ramping_power=${6:--3.0}
+log_name="./logs/VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}.log" 
+save_file_name="VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -17,6 +18,7 @@ python train.py --dataset CIFAR10 \
                 --TD_alpha $alpha \
                 --TD_gamma_final $gamma_final \
                 --TD_alpha_final $alpha_final \
+                --ramping_power $ramping_power \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \
