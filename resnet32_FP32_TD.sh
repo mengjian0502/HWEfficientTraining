@@ -2,15 +2,15 @@
 block_size=${1:-8}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:-0.9375}
+gamma_final=${4:-0.5}
 alpha_final=${5:-0.99}
 
-log_name="./logs/preresnet20_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.log" 
-save_file_name="preresnet20_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.pth" 
+log_name="./logs/resnet32_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.log" 
+save_file_name="resnet32_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.pth" 
 
 python3 train.py --dataset CIFAR10 \
                 --data_path ./data \
-                --model PreResNet20_TD \
+                --model ResNet32_TD \
                 --log_file $log_name \
                 --save_file $save_file_name \
                 --block_size $block_size \

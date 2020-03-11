@@ -1,6 +1,6 @@
 #!/bin/bash
-block_size=${1:-2}
-gamma=${2:-0.75}
+block_size=${1:-8}
+gamma=${2:-0.9375}
 alpha=${3:-1.0}
 
 log_name="./logs/preresnet20_FP32_TD_${block_size}_${gamma}_${alpha}_eval.log" 
