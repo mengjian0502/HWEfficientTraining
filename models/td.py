@@ -11,23 +11,26 @@ class Conv2d_TD(nn.Conv2d):
         self.gamma = gamma
         self.alpha = alpha
         self.block_size = block_size
+        self.count = 0
     
     def forward(self, input):
         # sort blocks by mean absolute value
         if self.gamma > 0 and self.alpha > 0:
-            with torch.no_grad():
-                block_values = F.avg_pool2d(self.weight.data.abs().permute(2,3,0,1),
-                                kernel_size=(self.block_size, self.block_size),
-                                stride=(self.block_size, self.block_size))
-                sorted_block_values, indices = torch.sort(block_values.contiguous().view(-1))
-                thre_index = int(block_values.data.numel() * self.gamma)
-                threshold = sorted_block_values[thre_index]
-                mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
-                mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
-                mask_keep = 1.0 - mask_small * mask_dropout
-                self.mask_keep_original = F.interpolate(mask_keep, 
-                                    scale_factor=(self.block_size, self.block_size)).permute(2,3,0,1)
-                #scale_factor = self.weight.abs().mean() / (self.weight * self.mask_keep_original).abs().mean()
+            if self.count % 1000 == 0:
+                with torch.no_grad():
+                    block_values = F.avg_pool2d(self.weight.data.abs().permute(2,3,0,1),
+                                    kernel_size=(self.block_size, self.block_size),
+                                    stride=(self.block_size, self.block_size))
+                    sorted_block_values, indices = torch.sort(block_values.contiguous().view(-1))
+                    thre_index = int(block_values.data.numel() * self.gamma)
+                    threshold = sorted_block_values[thre_index]
+                    mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
+                    mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
+                    mask_keep = 1.0 - mask_small * mask_dropout
+                    self.mask_keep_original = F.interpolate(mask_keep, 
+                                        scale_factor=(self.block_size, self.block_size)).permute(2,3,0,1)
+                    #scale_factor = self.weight.abs().mean() / (self.weight * self.mask_keep_original).abs().mean()
+            self.count += 1
             out = F.conv2d(input, self.weight * self.mask_keep_original, None, self.stride, self.padding,
                                         self.dilation, self.groups)
         else:
@@ -48,22 +51,25 @@ class Linear_TD(nn.Linear):
         self.gamma = gamma
         self.alpha = alpha
         self.block_size = block_size
+        self.count = 0
 
     def forward(self, input):
         if self.gamma > 0 and self.alpha > 0:
-            with torch.no_grad():
-                block_values = F.avg_pool2d(self.weight.data.abs().unsqueeze(0),
-                                kernel_size=(self.block_size, self.block_size),
-                                stride=(self.block_size, self.block_size))
-                sorted_block_values, indices = torch.sort(block_values.contiguous().view(-1))
-                thre_index = int(block_values.data.numel() * self.gamma)
-                threshold = sorted_block_values[thre_index]
-                mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
-                mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
-                mask_keep = 1.0 - mask_small * mask_dropout
-                self.mask_keep_original = F.interpolate(mask_keep.unsqueeze(0), 
-                                    scale_factor=(self.block_size, self.block_size)).squeeze()
-                #scale_factor = self.weight.abs().mean() / (self.weight * self.mask_keep_original).abs().mean()
+            if self.count % 1000 == 0:
+                with torch.no_grad():
+                    block_values = F.avg_pool2d(self.weight.data.abs().unsqueeze(0),
+                                    kernel_size=(self.block_size, self.block_size),
+                                    stride=(self.block_size, self.block_size))
+                    sorted_block_values, indices = torch.sort(block_values.contiguous().view(-1))
+                    thre_index = int(block_values.data.numel() * self.gamma)
+                    threshold = sorted_block_values[thre_index]
+                    mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
+                    mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
+                    mask_keep = 1.0 - mask_small * mask_dropout
+                    self.mask_keep_original = F.interpolate(mask_keep.unsqueeze(0), 
+                                        scale_factor=(self.block_size, self.block_size)).squeeze()
+                    #scale_factor = self.weight.abs().mean() / (self.weight * self.mask_keep_original).abs().mean()
+            self.count += 1
             return F.linear(input, self.weight * self.mask_keep_original, self.bias)
         else:
             return F.linear(input, self.weight, self.bias)

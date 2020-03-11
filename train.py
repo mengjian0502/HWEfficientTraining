@@ -31,8 +31,8 @@ parser.add_argument('--batch_size', type=int, default=128,
                     help='input batch size (default: 128)')
 parser.add_argument('--val_ratio', type=float, default=0.0,
                     help='Ratio of the validation set (default: 0.0)')
-parser.add_argument('--num_workers', type=int, default=4, 
-                    help='number of workers (default: 4)')
+parser.add_argument('--num_workers', type=int, default=2, 
+                    help='number of workers (default: 2)')
 parser.add_argument('--model', type=str, default='VGG16',
                     help='model name (default: None)')
 parser.add_argument('--resume', type=str, default=None, 
@@ -63,6 +63,8 @@ parser.add_argument('--TD_alpha_final', type=float, default=-1.0,
                     help='final alpha value for targeted dropout')
 parser.add_argument('--ramping_power', type=float, default=3.0,
                     help='power of ramping schedule')
+parser.add_argument('--lambda_BN', type=float, default=0,
+                    help='lambda for BN bias regularization')
 
 
 for num in num_types:
@@ -93,10 +95,11 @@ loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio
 if args.dataset=="CIFAR10": num_classes=10
 elif args.dataset=="IMAGENET12": num_classes=1000
 
-def get_result(loaders, model, phase, loss_scaling=1000.0):
+def get_result(loaders, model, phase, loss_scaling=1000.0, lambda_BN=0.0):
     time_ep = time.time()
     res = utils.run_epoch(loaders[phase], model, criterion,
-                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
+                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling,
+                                lambda_BN=lambda_BN)
     time_pass = time.time() - time_ep
     res['time_pass'] = time_pass
     return res
@@ -144,6 +147,7 @@ if 'TD' in args.model:
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
 logger.info('Model: {}'.format(model))
 model.cuda()
+Hooks_input = utils.add_input_record_Hook(model)
 criterion = F.cross_entropy
 optimizer = SGD(
    model.parameters(),
@@ -173,6 +177,8 @@ if args.evaluate is not None:
     print(model)
     test_res = get_result(loaders, model, "test", loss_scaling=1)
     print("test accuracy = %.3f%%" % test_res['accuracy'])
+    print("Weight sparsity = %.3f%%" % (utils.get_weight_sparsity(model) * 100.))
+    print("Activation sparsity = %.3f%%" % (utils.get_activation_sparsity(Hooks_input) * 100.))
     exit()
 
 def schedule(epoch):
@@ -206,17 +212,21 @@ def update_gamma_alpha(epoch):
 
 scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 # Prepare logging
-columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
+columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time', 'wspar', 'aspar']
 if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
     columns += ['gamma', 'alpha']
     
 for epoch in range(args.epochs):
     time_ep = time.time()
     TD_gamma, TD_alpha = update_gamma_alpha(epoch)
-    train_res = get_result(loaders, model, "train", loss_scaling)
+    train_res = get_result(loaders, model, "train", loss_scaling, args.lambda_BN)
     test_res = get_result(loaders, model, "test", loss_scaling)
     scheduler.step()
-    values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
+    weight_sparsity = utils.get_weight_sparsity(model)
+    activation_sparsity = utils.get_activation_sparsity(Hooks_input)
+
+    values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], 
+            train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass'], weight_sparsity, activation_sparsity]
     if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
         values += [TD_gamma, TD_alpha]
     utils.print_table(values, columns, epoch, logger)
