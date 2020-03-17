@@ -1,23 +1,23 @@
 #!/bin/bash
-block_size=${1:-2}
-gamma=${2:-0.0}
+block_size=${1:-8}
+gamma=${2:-0.75}
 alpha=${3:-1.0}
 
-log_name="./logs/resnet32_FP32_col_TD_${block_size}_${gamma}_${alpha}_eval.log" 
-save_file_name="resnet32_FP32_col_TD_${block_size}_${gamma}_${alpha}_eval.pth" 
+log_name="./logs/resnet32_FP8_TD_${block_size}_${gamma}_${alpha}_eval.log" 
+save_file_name="resnet32_FP8_TD_${block_size}_${gamma}_${alpha}_eval.pth" 
 
-eval_path="./checkpoint/resnet32_FP32_col_TD_${block_size}_0.0_0.0_ramp_${gamma}_0.99.pth"
+eval_path="./checkpoint/resnet32_FP8_TD_${block_size}_0.0_0.0_${gamma}_0.99.pth"
 
-python3 train.py --dataset CIFAR10 \
+python train.py --dataset CIFAR10 \
                 --data_path ./data \
-                --model ResNet32_TD \
+                --model ResNet32LP_TD \
                 --log_file $log_name \
                 --save_file $save_file_name \
                 --block_size $block_size \
                 --TD_gamma $gamma \
                 --TD_alpha $alpha \
                 --epochs=200 \
-                --lr_init=0.1 \
+                --lr_init=0.05 \
                 --wd=5e-4 \
                 --weight-man 2 \
                 --evaluate $eval_path \

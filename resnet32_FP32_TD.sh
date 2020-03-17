@@ -1,9 +1,9 @@
 #!/bin/bash
-block_size=${1:-8}
+block_size=${1:-2}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:-0.5}
-alpha_final=${5:-0.99}
+gamma_final=${4:-0.0}
+alpha_final=${5:-0.0}
 
 log_name="./logs/resnet32_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.log" 
 save_file_name="resnet32_FP32_col_TD_${block_size}_${gamma}_${alpha}_ramp_${gamma_final}_${alpha_final}.pth" 
