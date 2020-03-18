@@ -1,11 +1,11 @@
 #!/bin/bash
-block_size=${1:-8}
+block_size=${1:-4}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:-0.5}
+gamma_final=${4:-0.75}
 alpha_final=${5:-0.99}
 log_name="./logs/mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
-save_file_name="mobilenetv1_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
+save_file_name="mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \

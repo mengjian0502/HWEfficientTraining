@@ -189,6 +189,17 @@ def schedule(epoch):
 
     return factor
 
+def schedule_traditional(epoch):
+    t = (epoch) / args.epochs
+    if t <= 0.3:
+        factor = 1.0
+    elif t <= 0.6:
+        factor = 0.1
+    else:
+        factor = 0.1
+
+    return factor
+
 def update_gamma_alpha(epoch):
     if args.TD_gamma_final > 0:
         TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
@@ -206,7 +217,9 @@ def update_gamma_alpha(epoch):
         TD_alpha = args.TD_alpha
     return TD_gamma, TD_alpha
 
-scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
+# scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
+scheduler = LambdaLR(optimizer, lr_lambda=[schedule_traditional])
+
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
 if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
