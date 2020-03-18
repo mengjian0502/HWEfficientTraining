@@ -7,3 +7,4 @@ from .preresnet_low import *
 from .preresnet_TD import *
 from .resnet_TD import *
 from .resnet_low_TD import *
+from .mobilenet_low_TD import *
