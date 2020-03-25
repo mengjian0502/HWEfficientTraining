@@ -31,7 +31,24 @@ class Hook_record_grad():
 
     def close(self):
         self.hook.remove()
-        
+
+class Hook_sparsify_grad_input():
+    def __init__(self, module, gamma=0.5):
+        self.hook = module.register_backward_hook(self.hook_fn)
+        self.gamma = gamma
+
+    def hook_fn(self, module, grad_input, grad_output):
+        self.grad_input = grad_input
+        num_grad_input_to_keep = int(grad_input.numel() * (1.0 - self.gamma))
+        threshold, _ = torch.kthvalue(abs(grad_input).view(-1), num_grad_input_to_keep)
+        grad_input_new = grad_input
+        grad_input_new[abs(grad_input) < threshold] = 0
+        return grad_input_new
+
+    def close(self):
+        self.hook.remove()
+
+
 def add_input_record_Hook(model, name_as_key=False):
     Hooks = {}
     if name_as_key:
@@ -54,6 +71,19 @@ def add_grad_record_Hook(model, name_as_key=False):
     else:
         for k,module in enumerate(model.modules()):
             Hooks[k] = Hook_record_grad(module)
+    return Hooks
+
+def add_sparsify_grad_input_Hook(model, gamma=0.5, name_as_key=False):
+    Hooks = {}
+    if name_as_key:
+        for name,module in model.named_modules():
+            if isinstance(module, nn.BatchNorm2d): # only sparsify grad_input of batchnorm, which is grad_output of conv2d
+                Hooks[name] = Hook_sparsify_grad_input(module, gamma)
+            
+    else:
+        for k,module in enumerate(model.modules()):
+            if isinstance(module, nn.BatchNorm2d): # only sparsify grad_input of batchnorm, which is grad_output of conv2d
+                Hooks[k] = Hook_sparsify_grad_input(module, gamma)
     return Hooks
 
 def remove_hooks(Hooks):

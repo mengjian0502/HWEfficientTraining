@@ -67,6 +67,8 @@ parser.add_argument('--lambda_BN', type=float, default=0,
                     help='lambda for BN bias regularization')
 parser.add_argument('--init_BN_bias', type=float, default=0,
                     help='initial bias for batch norm')
+parser.add_argument('--gradient_gamma', type=float, default=0.0,
+                    help='prunning ratio for gradient during backward')
 
 
 for num in num_types:
@@ -150,6 +152,8 @@ model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwa
 logger.info('Model: {}'.format(model))
 model.cuda()
 Hooks_input = utils.add_input_record_Hook(model)
+if args.gradient_gamma > 0:
+    Hooks_grad = utils.add_sparsify_grad_input_Hook(model, args.gradient_gamma)
 criterion = F.cross_entropy
 optimizer = SGD(
    model.parameters(),
