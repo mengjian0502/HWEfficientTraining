@@ -65,6 +65,8 @@ parser.add_argument('--ramping_power', type=float, default=3.0,
                     help='power of ramping schedule')
 parser.add_argument('--lambda_BN', type=float, default=0,
                     help='lambda for BN bias regularization')
+parser.add_argument('--init_BN_bias', type=float, default=0,
+                    help='initial bias for batch norm')
 
 
 for num in num_types:
@@ -156,6 +158,9 @@ optimizer = SGD(
    weight_decay=args.wd,
 )
 loss_scaling = 1.0
+
+if args.init_BN_bias != 0:
+    utils.set_BN_bias(model, args.init_BN_bias)
 
 if 'LP' in args.model:
     loss_scaling = 1000.0

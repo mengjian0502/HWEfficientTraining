@@ -6,8 +6,9 @@ gamma_final=${4:--1.0}
 alpha_final=${5:--1.0}
 ramping_power=${6:--5.0}
 lambda_BN=${7:-1e-4}
-log_name="./logs/VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}.log" 
-save_file_name="VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}.pth" 
+init_BN_bias=${8:-0}
+log_name="./logs/VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}.log" 
+save_file_name="VGG16BN_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}.pth" 
 
 kernprof -l train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -21,6 +22,7 @@ kernprof -l train.py --dataset CIFAR10 \
                 --TD_alpha_final $alpha_final \
                 --ramping_power $ramping_power \
                 --lambda_BN $lambda_BN \
+                --init_BN_bias $init_BN_bias \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \

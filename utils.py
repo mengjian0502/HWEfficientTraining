@@ -4,7 +4,7 @@ import tabulate
 import torch.nn as nn
 import pandas as pd
 import matplotlib
-
+import numpy as np
 matplotlib.use('svg')
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 24})
@@ -66,6 +66,11 @@ def getBatchNormBiasRegularizer(model):
         if isinstance(m, nn.BatchNorm2d):
             Loss += torch.exp(m.bias).sum()
     return Loss
+
+def set_BN_bias(model, init_bias):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.bias.data = init_bias * torch.ones_like(m.bias.data)
 
 def get_weight_sparsity(model):
     total = 0.
