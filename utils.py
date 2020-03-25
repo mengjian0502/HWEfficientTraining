@@ -38,12 +38,12 @@ class Hook_sparsify_grad_input():
         self.gamma = gamma
 
     def hook_fn(self, module, grad_input, grad_output):
-        self.grad_input = grad_input
-        num_grad_input_to_keep = int(grad_input.numel() * (1.0 - self.gamma))
-        threshold, _ = torch.kthvalue(abs(grad_input).view(-1), num_grad_input_to_keep)
-        grad_input_new = grad_input
-        grad_input_new[abs(grad_input) < threshold] = 0
-        return grad_input_new
+        num_grad_input_to_keep = int(grad_input[0].numel() * (1.0 - self.gamma)) # grad_input contains grad for input, weight and bias
+        threshold, _ = torch.kthvalue(abs(grad_input[0]).view(-1), num_grad_input_to_keep)
+        grad_input_new = grad_input[0]
+        grad_input_new[abs(grad_input[0]) < threshold] = 0
+        self.grad_input = grad_input_new
+        return (grad_input_new, grad_input[1], grad_input[2])
 
     def close(self):
         self.hook.remove()
