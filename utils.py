@@ -9,9 +9,6 @@ matplotlib.use('svg')
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 24})
 
-
-
-
 class Hook_record_input():
     def __init__(self, module):
         self.hook = module.register_forward_hook(self.hook_fn)
@@ -27,7 +24,7 @@ class Hook_record_grad():
         self.hook = module.register_backward_hook(self.hook_fn)
 
     def hook_fn(self, module, grad_input, grad_output):
-        self.grad_input = grad_input
+        self.grad_output = grad_output
 
     def close(self):
         self.hook.remove()
@@ -38,11 +35,11 @@ class Hook_sparsify_grad_input():
         self.gamma = gamma
 
     def hook_fn(self, module, grad_input, grad_output):
-        num_grad_input_to_keep = int(grad_input[0].numel() * (1.0 - self.gamma)) # grad_input contains grad for input, weight and bias
+        num_grad_input_to_keep = int(grad_input[0].numel() * self.gamma) # grad_input contains grad for input, weight and bias
         threshold, _ = torch.kthvalue(abs(grad_input[0]).view(-1), num_grad_input_to_keep)
         grad_input_new = grad_input[0]
         grad_input_new[abs(grad_input[0]) < threshold] = 0
-        self.grad_input = grad_input_new
+        #self.grad_input = grad_input_new
         return (grad_input_new, grad_input[1], grad_input[2])
 
     def close(self):
@@ -79,11 +76,15 @@ def add_sparsify_grad_input_Hook(model, gamma=0.5, name_as_key=False):
         for name,module in model.named_modules():
             if isinstance(module, nn.BatchNorm2d): # only sparsify grad_input of batchnorm, which is grad_output of conv2d
                 Hooks[name] = Hook_sparsify_grad_input(module, gamma)
+            elif isinstance(module, nn.Conv2d):
+                Hooks[name] = Hook_record_grad(module)
             
     else:
         for k,module in enumerate(model.modules()):
             if isinstance(module, nn.BatchNorm2d): # only sparsify grad_input of batchnorm, which is grad_output of conv2d
                 Hooks[k] = Hook_sparsify_grad_input(module, gamma)
+            elif isinstance(module, nn.Conv2d):
+                Hooks[k] = Hook_record_grad(module)
     return Hooks
 
 def remove_hooks(Hooks):

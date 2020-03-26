@@ -151,9 +151,6 @@ if 'TD' in args.model:
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
 logger.info('Model: {}'.format(model))
 model.cuda()
-Hooks_input = utils.add_input_record_Hook(model)
-if args.gradient_gamma > 0:
-    Hooks_grad = utils.add_sparsify_grad_input_Hook(model, args.gradient_gamma)
 criterion = F.cross_entropy
 optimizer = SGD(
    model.parameters(),
@@ -176,6 +173,7 @@ if 'LP' in args.model:
                         grad_scaling=1/loss_scaling # scaling down the gradient
     )
 
+Hooks_input = utils.add_input_record_Hook(model)
 if args.evaluate is not None:
     model.load_state_dict(checkpoint['state_dict'])
     # update TD gamma and alpha value if needed
@@ -189,6 +187,8 @@ if args.evaluate is not None:
     print("Weight sparsity = %.3f%%" % (utils.get_weight_sparsity(model) * 100.))
     print("Activation sparsity = %.3f%%" % (utils.get_activation_sparsity(Hooks_input) * 100.))
     exit()
+if args.gradient_gamma > 0:
+    Hooks_sparsify_grad = utils.add_sparsify_grad_input_Hook(model, args.gradient_gamma)
 
 def schedule(epoch):
     t = (epoch) / args.epochs
