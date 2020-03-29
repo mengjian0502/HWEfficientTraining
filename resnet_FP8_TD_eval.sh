@@ -1,12 +1,12 @@
 #!/bin/bash
-block_size=${1:-1}
-gamma=${2:-0.9375}
+block_size=${1:-8}
+gamma=${2:-0.5}
 alpha=${3:-1.0}
 
-log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_eval.log" 
-save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_eval.pth" 
+log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_eval_fast_lr_e100_eval.log" 
+save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_eval_fast_lr_e100_eval.pth" 
 
-eval_path="./checkpoint/resnet20_FP8_TD_${block_size}_0.0_0.0_${gamma}_0.99.pth"
+eval_path="./checkpoint/resnet20_FP8_TD_${block_size}_0.0_0.0_${gamma}_0.99_fast_lr_e100_g01_maxlr0.075.pth"
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -16,7 +16,7 @@ python train.py --dataset CIFAR10 \
                 --block_size $block_size \
                 --TD_gamma $gamma \
                 --TD_alpha $alpha \
-                --epochs=200 \
+                --epochs=100 \
                 --lr_init=0.05 \
                 --wd=5e-4 \
                 --weight-man 2 \

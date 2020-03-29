@@ -2,6 +2,10 @@ import os
 import torch
 import tabulate
 import torch.nn as nn
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns; sns.set()
+from collections import namedtuple, defaultdict
 
 class Hook_record_input():
     def __init__(self, module):
@@ -99,3 +103,22 @@ def run_epoch(loader, model, criterion, optimizer=None,
         'accuracy': correct / float(ttl) * 100.0,
     }
 
+# Learning rate schedule for fast training
+class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
+    def __call__(self, t):
+        return np.interp([t], self.knots, self.vals)[0]
+
+class Const(namedtuple('Const', ['val'])):
+    def __call__(self, x):
+        return self.val
+
+def curve_plot(epoch, train_acc, test_acc, filename):
+    plt.figure(figsize=(10,8))
+    plt.plot(np.arange(1, epoch+1, 1), np.array(train_acc), label='training accuracy')
+    plt.plot(np.arange(1, epoch+1, 1), np.array(test_acc), label='test accuracy')
+    
+    plt.grid(True)
+    plt.legend(loc='best')
+    plt.xlabel('Epoch')
+    plt.ylabel('Acc')
+    plt.savefig(filename+'.png', dpi=200)

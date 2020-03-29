@@ -17,6 +17,7 @@ from torch.optim import SGD
 from qtorch import BlockFloatingPoint, FixedPoint, FloatingPoint
 from qtorch.quant import quantizer, Quantizer
 import logging
+
 torch.manual_seed(0)
 np.random.seed(0)
 
@@ -155,6 +156,10 @@ optimizer = SGD(
 )
 loss_scaling = 1.0
 
+# ==== Fast lr ==== #
+# lr_schedule = utils.PiecewiseLinear([0, 50, 80, 90, args.epochs], [args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
+lr_schedule = utils.PiecewiseLinear([0, 35, 50, 80, 90, args.epochs], [args.lr_init, 1.0 * args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
+
 if 'LP' in args.model:
     loss_scaling = 1000.0
     optimizer = OptimLP(optimizer,
@@ -200,6 +205,14 @@ def schedule_traditional(epoch):
 
     return factor
 
+class fast_lr_sch():
+    def __init__(self, schedule, optimizer):
+        self.sch = schedule
+        self.opt = optimizer
+    def step(self, epoch):
+        for param_group in self.opt.param_groups:
+            param_group['lr'] = self.sch(epoch+1)
+
 def update_gamma_alpha(epoch):
     if args.TD_gamma_final > 0:
         TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
@@ -217,24 +230,34 @@ def update_gamma_alpha(epoch):
         TD_alpha = args.TD_alpha
     return TD_gamma, TD_alpha
 
-# scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
-scheduler = LambdaLR(optimizer, lr_lambda=[schedule_traditional])
+scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
+# scheduler = LambdaLR(optimizer, lr_lambda=[schedule_traditional])
+fast_sch = fast_lr_sch(lr_schedule, optimizer)
 
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
 if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
     columns += ['gamma', 'alpha']
-    
+
+train_acc = []
+test_acc = []
 for epoch in range(args.epochs):
     time_ep = time.time()
     TD_gamma, TD_alpha = update_gamma_alpha(epoch)
     train_res = get_result(loaders, model, "train", loss_scaling)
     test_res = get_result(loaders, model, "test", loss_scaling)
-    scheduler.step()
+    # scheduler.step()
+    fast_sch.step(epoch)
     values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
+    
+    train_acc.append(train_res['accuracy'])
+    test_acc.append(test_res['accuracy'])
+
     if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
         values += [TD_gamma, TD_alpha]
     utils.print_table(values, columns, epoch, logger)
+
+utils.curve_plot(args.epochs, train_acc, test_acc, filename='./figs/curve_e100_fast_lr_g04_maxlr0.075_min0.0005to0.00025')
 
 if args.save_file is not None:
     torch.save({
