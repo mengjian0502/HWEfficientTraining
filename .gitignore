@@ -6,3 +6,6 @@ __pycache__
 data
 checkpoint
 logs
+*.lprof
+*/*.svg
+*.svg

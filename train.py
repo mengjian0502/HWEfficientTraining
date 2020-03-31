@@ -32,8 +32,8 @@ parser.add_argument('--batch_size', type=int, default=128,
                     help='input batch size (default: 128)')
 parser.add_argument('--val_ratio', type=float, default=0.0,
                     help='Ratio of the validation set (default: 0.0)')
-parser.add_argument('--num_workers', type=int, default=4, 
-                    help='number of workers (default: 4)')
+parser.add_argument('--num_workers', type=int, default=2, 
+                    help='number of workers (default: 2)')
 parser.add_argument('--model', type=str, default='VGG16',
                     help='model name (default: None)')
 parser.add_argument('--resume', type=str, default=None, 
@@ -62,6 +62,14 @@ parser.add_argument('--TD_gamma_final', type=float, default=-1.0,
                     help='final gamma value for targeted dropout')
 parser.add_argument('--TD_alpha_final', type=float, default=-1.0,
                     help='final alpha value for targeted dropout')
+parser.add_argument('--ramping_power', type=float, default=3.0,
+                    help='power of ramping schedule')
+parser.add_argument('--lambda_BN', type=float, default=0,
+                    help='lambda for BN bias regularization')
+parser.add_argument('--init_BN_bias', type=float, default=0,
+                    help='initial bias for batch norm')
+parser.add_argument('--gradient_gamma', type=float, default=0.0,
+                    help='prunning ratio for gradient during backward')
 
 
 for num in num_types:
@@ -96,10 +104,11 @@ loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio
 if args.dataset=="CIFAR10": num_classes=10
 elif args.dataset=="IMAGENET12": num_classes=1000
 
-def get_result(loaders, model, phase, loss_scaling=1000.0):
+def get_result(loaders, model, phase, loss_scaling=1000.0, lambda_BN=0.0):
     time_ep = time.time()
     res = utils.run_epoch(loaders[phase], model, criterion,
-                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling)
+                                optimizer=optimizer, phase=phase, loss_scaling=loss_scaling,
+                                lambda_BN=lambda_BN)
     time_pass = time.time() - time_ep
     res['time_pass'] = time_pass
     return res
@@ -156,9 +165,14 @@ optimizer = SGD(
 )
 loss_scaling = 1.0
 
+<<<<<<< HEAD
 # ==== Fast lr ==== #
 # lr_schedule = utils.PiecewiseLinear([0, 50, 80, 90, args.epochs], [args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
 lr_schedule = utils.PiecewiseLinear([0, 35, 50, 80, 90, args.epochs], [args.lr_init, 1.0 * args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
+=======
+if args.init_BN_bias != 0:
+    utils.set_BN_bias(model, args.init_BN_bias)
+>>>>>>> upstream/master
 
 if 'LP' in args.model:
     loss_scaling = 1000.0
@@ -170,6 +184,7 @@ if 'LP' in args.model:
                         grad_scaling=1/loss_scaling # scaling down the gradient
     )
 
+Hooks_input = utils.add_input_record_Hook(model)
 if args.evaluate is not None:
     model.load_state_dict(checkpoint['state_dict'])
     # update TD gamma and alpha value if needed
@@ -180,7 +195,11 @@ if args.evaluate is not None:
     print(model)
     test_res = get_result(loaders, model, "test", loss_scaling=1)
     print("test accuracy = %.3f%%" % test_res['accuracy'])
+    print("Weight sparsity = %.3f%%" % (utils.get_weight_sparsity(model) * 100.))
+    print("Activation sparsity = %.3f%%" % (utils.get_activation_sparsity(Hooks_input) * 100.))
     exit()
+if args.gradient_gamma > 0:
+    Hooks_sparsify_grad = utils.add_sparsify_grad_input_Hook(model, args.gradient_gamma)
 
 def schedule(epoch):
     t = (epoch) / args.epochs
@@ -215,14 +234,14 @@ class fast_lr_sch():
 
 def update_gamma_alpha(epoch):
     if args.TD_gamma_final > 0:
-        TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_gamma_final - args.TD_gamma)
+        TD_gamma = args.TD_gamma_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** args.ramping_power) * (args.TD_gamma_final - args.TD_gamma)
         for m in model.modules():
             if hasattr(m, 'gamma'):
                 m.gamma = TD_gamma
     else:
         TD_gamma = args.TD_gamma
     if args.TD_alpha_final > 0:
-        TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** 3) * (args.TD_alpha_final - args.TD_alpha)
+        TD_alpha = args.TD_alpha_final - (((args.epochs - 1 - epoch)/(args.epochs - 1)) ** args.ramping_power) * (args.TD_alpha_final - args.TD_alpha)
         for m in model.modules():
             if hasattr(m, 'alpha'):
                 m.alpha = TD_alpha
@@ -235,7 +254,7 @@ scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 fast_sch = fast_lr_sch(lr_schedule, optimizer)
 
 # Prepare logging
-columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time']
+columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time', 'wspar', 'aspar']
 if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
     columns += ['gamma', 'alpha']
 
@@ -244,15 +263,21 @@ test_acc = []
 for epoch in range(args.epochs):
     time_ep = time.time()
     TD_gamma, TD_alpha = update_gamma_alpha(epoch)
-    train_res = get_result(loaders, model, "train", loss_scaling)
+    train_res = get_result(loaders, model, "train", loss_scaling, args.lambda_BN)
     test_res = get_result(loaders, model, "test", loss_scaling)
-    # scheduler.step()
-    fast_sch.step(epoch)
-    values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
+    # # scheduler.step()
+    # fast_sch.step(epoch)
+    # values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
     
-    train_acc.append(train_res['accuracy'])
-    test_acc.append(test_res['accuracy'])
+    # train_acc.append(train_res['accuracy'])
+    # test_acc.append(test_res['accuracy'])
 
+    scheduler.step()
+    weight_sparsity = utils.get_weight_sparsity(model)
+    activation_sparsity = utils.get_activation_sparsity(Hooks_input)
+
+    values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], 
+            train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass'], weight_sparsity, activation_sparsity]
     if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
         values += [TD_gamma, TD_alpha]
     utils.print_table(values, columns, epoch, logger)

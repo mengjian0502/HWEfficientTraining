@@ -4,12 +4,12 @@ gamma=${2:-0.0}
 alpha=${3:-0.0}
 gamma_final=${4:--1.0}
 alpha_final=${5:--1.0}
-log_name="./logs/VGG16_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
-save_file_name="VGG16_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
+log_name="./logs/PreResNet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
+save_file_name="PreResNet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
-                --model VGG16LP_TD \
+                --model PreResNet20LP_TD \
                 --log_file $log_name \
                 --save_file $save_file_name \
                 --block_size $block_size \
