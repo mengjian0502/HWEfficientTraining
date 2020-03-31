@@ -165,14 +165,12 @@ optimizer = SGD(
 )
 loss_scaling = 1.0
 
-<<<<<<< HEAD
-# ==== Fast lr ==== #
-# lr_schedule = utils.PiecewiseLinear([0, 50, 80, 90, args.epochs], [args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
-lr_schedule = utils.PiecewiseLinear([0, 35, 50, 80, 90, args.epochs], [args.lr_init, 1.0 * args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
-=======
+# # ==== Fast lr ==== #
+# # lr_schedule = utils.PiecewiseLinear([0, 50, 80, 90, args.epochs], [args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
+# lr_schedule = utils.PiecewiseLinear([0, 35, 50, 80, 90, args.epochs], [args.lr_init, 1.0 * args.lr_init, 1.5 * args.lr_init, 0.2 * args.lr_init, 0.01 * args.lr_init, 0.005 * args.lr_init])
+
 if args.init_BN_bias != 0:
     utils.set_BN_bias(model, args.init_BN_bias)
->>>>>>> upstream/master
 
 if 'LP' in args.model:
     loss_scaling = 1000.0
@@ -269,8 +267,8 @@ for epoch in range(args.epochs):
     # fast_sch.step(epoch)
     # values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
     
-    # train_acc.append(train_res['accuracy'])
-    # test_acc.append(test_res['accuracy'])
+    train_acc.append(train_res['accuracy'])
+    test_acc.append(test_res['accuracy'])
 
     scheduler.step()
     weight_sparsity = utils.get_weight_sparsity(model)
