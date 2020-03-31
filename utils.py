@@ -2,19 +2,12 @@ import os
 import torch
 import tabulate
 import torch.nn as nn
-<<<<<<< HEAD
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns; sns.set()
-from collections import namedtuple, defaultdict
-=======
 import pandas as pd
 import matplotlib
 import numpy as np
 matplotlib.use('svg')
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 24})
->>>>>>> upstream/master
 
 class Hook_record_input():
     def __init__(self, module):

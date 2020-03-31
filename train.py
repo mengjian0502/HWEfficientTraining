@@ -265,7 +265,6 @@ for epoch in range(args.epochs):
     test_res = get_result(loaders, model, "test", loss_scaling)
     # # scheduler.step()
     # fast_sch.step(epoch)
-    # values = [epoch + 1, optimizer.param_groups[0]['lr'], train_res['loss'], train_res['accuracy'], train_res['time_pass'], test_res['loss'], test_res['accuracy'], test_res['time_pass']]
     
     train_acc.append(train_res['accuracy'])
     test_acc.append(test_res['accuracy'])
@@ -279,8 +278,6 @@ for epoch in range(args.epochs):
     if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
         values += [TD_gamma, TD_alpha]
     utils.print_table(values, columns, epoch, logger)
-
-utils.curve_plot(args.epochs, train_acc, test_acc, filename='./figs/curve_e100_fast_lr_g04_maxlr0.075_min0.0005to0.00025')
 
 if args.save_file is not None:
     torch.save({
