@@ -178,13 +178,13 @@ def run_epoch(loader, model, criterion, optimizer=None,
     }
 
 # Learning rate schedule for fast training
-class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
-    def __call__(self, t):
-        return np.interp([t], self.knots, self.vals)[0]
+# class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
+#     def __call__(self, t):
+#         return np.interp([t], self.knots, self.vals)[0]
 
-class Const(namedtuple('Const', ['val'])):
-    def __call__(self, x):
-        return self.val
+# class Const(namedtuple('Const', ['val'])):
+#     def __call__(self, x):
+#         return self.val
 
 def curve_plot(epoch, train_acc, test_acc, filename):
     plt.figure(figsize=(10,8))
