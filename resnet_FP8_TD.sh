@@ -2,10 +2,14 @@
 block_size=${1:-8}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:-0.5}
+gamma_final=${4:-0.75}
 alpha_final=${5:-0.99}
-log_name="./logs/fast_lr/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_fast_lr_e100_g01_maxlr0.075.log" 
-save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_fast_lr_e100_g01_maxlr0.075.pth" 
+ramping_power=${6:--5.0}
+lambda_BN=${7:-1e-4}
+init_BN_bias=${8:-0}
+gradient_gamma=${9:-0}
+log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.log" 
+save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -17,7 +21,11 @@ python train.py --dataset CIFAR10 \
                 --TD_alpha $alpha \
                 --TD_gamma_final $gamma_final \
                 --TD_alpha_final $alpha_final \
-                --epochs=100 \
+                --ramping_power $ramping_power \
+                --lambda_BN $lambda_BN \
+                --init_BN_bias $init_BN_bias \
+                --gradient_gamma $gradient_gamma \
+                --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \
                 --weight-man 2 \
