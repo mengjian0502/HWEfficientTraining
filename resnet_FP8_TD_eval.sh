@@ -1,12 +1,16 @@
 #!/bin/bash
 block_size=${1:-8}
-gamma=${2:-0.5}
+gamma=${2:-0.75}
 alpha=${3:-1.0}
+ramping_power=${6:--5.0}
+lambda_BN=${7:-1e-4}
+init_BN_bias=${8:-0}
+gradient_gamma=${9:-0}
 
-log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_eval_fast_lr_e100_eval.log" 
-save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_eval_fast_lr_e100_eval.pth" 
+log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}_eval.log" 
+save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}_eval.pth" 
 
-eval_path="./checkpoint/resnet20_FP8_TD_${block_size}_0.0_0.0_${gamma}_0.99_fast_lr_e100_g01_maxlr0.075.pth"
+eval_path="./checkpoint/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.pth"
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -16,7 +20,11 @@ python train.py --dataset CIFAR10 \
                 --block_size $block_size \
                 --TD_gamma $gamma \
                 --TD_alpha $alpha \
-                --epochs=100 \
+                --ramping_power $ramping_power \
+                --lambda_BN $lambda_BN \
+                --init_BN_bias $init_BN_bias \
+                --gradient_gamma $gradient_gamma \
+                --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \
                 --weight-man 2 \
