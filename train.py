@@ -249,7 +249,7 @@ def update_gamma_alpha(epoch):
 
 scheduler = LambdaLR(optimizer, lr_lambda=[schedule])
 # scheduler = LambdaLR(optimizer, lr_lambda=[schedule_traditional])
-fast_sch = fast_lr_sch(lr_schedule, optimizer)
+# fast_sch = fast_lr_sch(lr_schedule, optimizer)
 
 # Prepare logging
 columns = ['ep', 'lr', 'tr_loss', 'tr_acc', 'tr_time', 'te_loss', 'te_acc', 'te_time', 'wspar', 'aspar']
