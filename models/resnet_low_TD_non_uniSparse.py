@@ -6,14 +6,14 @@ import math
 from qtorch import FloatingPoint
 from qtorch.quant import Quantizer
 from torch.nn import init
-from .td import Conv2d_TD, Linear_TD, Conv2d_col_TD
+from .td_non_uniSparse import Conv2d_TD, Linear_TD, Conv2d_col_TD
 
 
-__all__ = ['ResNet20LP_TD','ResNet32LP_TD']
+__all__ = ['ResNet20LP_TD_LayerSort','ResNet32LP_TD_LayerSort']
 
-def conv3x3_td(in_planes, out_planes, kernel_size=3, stride=1, padding=1, bias=False, gamma=0.5, alpha=0.5, block_size=16):
+def conv3x3_td(in_planes, out_planes, kernel_size=3, stride=1, padding=1, bias=False, gamma=0.5, alpha=0.5, block_size=16, non_uni_sparse=True, threshold=0.0):
     return Conv2d_TD(in_planes, out_planes, kernel_size=kernel_size, stride=stride,
-                     padding=padding, bias=bias, gamma=gamma, alpha=alpha, block_size=block_size)
+                     padding=padding, bias=bias, gamma=gamma, alpha=alpha, block_size=block_size, non_uni_sparse=non_uni_sparse, threshold=threshold)
     # return Conv2d_col_TD(in_planes, out_planes, kernel_size=3, stride=stride,
     #                   padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size)
 
@@ -22,13 +22,13 @@ class ResNetBasicblock(nn.Module):
   """
   RexNet basicblock (https://github.com/facebook/fb.resnet.torch/blob/master/models/resnet.lua)
   """
-  def __init__(self, inplanes, planes, quant, stride=1, downsample=None, gamma=0.5, alpha=0.5, block_size=16):
+  def __init__(self, inplanes, planes, quant, stride=1, downsample=None, gamma=0.5, alpha=0.5, block_size=16, non_uni_sparse=True, threshold=0.0):
     super(ResNetBasicblock, self).__init__() 
     # self.conv_a = nn.Conv2d(inplanes, planes, kernel_size=3, stride=stride, padding=1, bias=False)   # full precision
-    self.conv_a = conv3x3_td(inplanes, planes, kernel_size=3, stride=stride, padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size)
+    self.conv_a = conv3x3_td(inplanes, planes, kernel_size=3, stride=stride, padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size, non_uni_sparse=non_uni_sparse, threshold=threshold)
     self.bn_a = nn.BatchNorm2d(planes)
     # self.conv_b = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False) # full precision
-    self.conv_b = conv3x3_td(planes, planes, kernel_size=3, stride=1, padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size)
+    self.conv_b = conv3x3_td(planes, planes, kernel_size=3, stride=1, padding=1, bias=False, gamma=gamma, alpha=alpha, block_size=block_size, non_uni_sparse=non_uni_sparse, threshold=threshold)
     self.bn_b = nn.BatchNorm2d(planes)
     self.downsample = downsample
     self.quant = quant()
@@ -57,7 +57,7 @@ class CifarResNet(nn.Module):
   ResNet optimized for the Cifar dataset, as specified in
   https://arxiv.org/abs/1512.03385.pdf
   """
-  def __init__(self, quant, depth, num_classes, gamma=0.5, alpha=0.5, block_size=16):
+  def __init__(self, quant, depth, num_classes, gamma=0.5, alpha=0.5, block_size=16, non_uni_sparse=True, threshold=0.0):
     """ Constructor
     Args:
       depth: number of layers.
@@ -72,6 +72,9 @@ class CifarResNet(nn.Module):
     assert (depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110'
     layer_blocks = (depth - 2) // 6
     print ('CifarResNet : Depth : {} , Layers for each block : {}'.format(depth, layer_blocks))
+    self.non_uni_sparse = non_uni_sparse
+    self.threshold = threshold
+
     self.num_classes = num_classes
     self.conv_1_3x3 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
 
@@ -106,15 +109,15 @@ class CifarResNet(nn.Module):
     if stride != 1 or self.inplanes != planes * block.expansion:
         downsample = nn.Sequential(
           Conv2d_TD(self.inplanes, planes * block.expansion,
-                    kernel_size=1, stride=stride, bias=False),
+                    kernel_size=1, stride=stride, bias=False, gamma=gamma, alpha=alpha, block_size=block_size, non_uni_sparse=self.non_uni_sparse, threshold=self.threshold),
           nn.BatchNorm2d(planes * block.expansion),
         )
 
     layers = []
-    layers.append(block(self.inplanes, planes, quant, stride, downsample, gamma=gamma, alpha=alpha, block_size=block_size))
+    layers.append(block(self.inplanes, planes, quant, stride, downsample, gamma=gamma, alpha=alpha, block_size=block_size, non_uni_sparse=self.non_uni_sparse, threshold=self.threshold))
     self.inplanes = planes * block.expansion
     for i in range(1, blocks):
-      layers.append(block(self.inplanes, planes, quant, gamma=gamma, alpha=alpha, block_size=block_size))
+      layers.append(block(self.inplanes, planes, quant, gamma=gamma, alpha=alpha, block_size=block_size, non_uni_sparse=self.non_uni_sparse, threshold=self.threshold))
 
     return nn.Sequential(*layers)
 
@@ -135,10 +138,10 @@ class CifarResNet(nn.Module):
     return x
 
 
-class ResNet32LP_TD:
+class ResNet32LP_TD_LayerSort:
   base = CifarResNet
   args = list()
-  kwargs = {'depth': 32}
+  kwargs = {'depth': 32, 'non_uni_sparse': True}
   transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -150,10 +153,10 @@ class ResNet32LP_TD:
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
   ])
 
-class ResNet20LP_TD:
+class ResNet20LP_TD_LayerSort:
   base = CifarResNet
   args = list()
-  kwargs = {'depth': 20}
+  kwargs = {'depth': 20, 'non_uni_sparse': True}
   transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),

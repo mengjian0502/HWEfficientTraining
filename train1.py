@@ -69,6 +69,7 @@ parser.add_argument('--init_BN_bias', type=float, default=0,
                     help='initial bias for batch norm')
 parser.add_argument('--gradient_gamma', type=float, default=0.0,
                     help='prunning ratio for gradient during backward')
+parser.add_argument('--non_uni_sparse', action='store_true', help='Non uniformly distributed sparsity levels')
 
 
 for num in num_types:
@@ -99,11 +100,11 @@ loaders = get_data(args.dataset, args.data_path, args.batch_size, args.val_ratio
 if args.dataset=="CIFAR10": num_classes=10
 elif args.dataset=="IMAGENET12": num_classes=1000
 
-def get_result(loaders, model, phase, loss_scaling=1000.0, lambda_BN=0.0):
+def get_result(loaders, model, phase, loss_scaling=1000.0, lambda_BN=0.0, gamma=0.0, block_size=16):
     time_ep = time.time()
     res = utils.run_epoch(loaders[phase], model, criterion,
                                 optimizer=optimizer, phase=phase, loss_scaling=loss_scaling,
-                                lambda_BN=lambda_BN)
+                                lambda_BN=lambda_BN, gamma=gamma, block_size=block_size)
     time_pass = time.time() - time_ep
     res['time_pass'] = time_pass
     return res
@@ -230,11 +231,10 @@ for epoch in range(args.epochs):
     time_ep = time.time()
     TD_gamma, TD_alpha = update_gamma_alpha(epoch)
     
-    # update the gamma value for each layer
-    utils.model_sorting(model, TD_gamma)
+    # update the gamma value for each layers
 
-    train_res = get_result(loaders, model, "train", loss_scaling, args.lambda_BN)
-    test_res = get_result(loaders, model, "test", loss_scaling)
+    train_res = get_result(loaders, model, "train", loss_scaling, args.lambda_BN, gamma=TD_gamma, block_size=args.block_size)
+    test_res = get_result(loaders, model, "test", loss_scaling, gamma=TD_gamma, block_size=args.block_size)
     scheduler.step()
     weight_sparsity = utils.get_weight_sparsity(model)
     activation_sparsity = utils.get_activation_sparsity(Hooks_input)

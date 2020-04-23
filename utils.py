@@ -2,12 +2,13 @@ import os
 import torch
 import tabulate
 import torch.nn as nn
+import torch.nn.functional as F
 import pandas as pd
 import matplotlib
 import numpy as np
 matplotlib.use('svg')
 import matplotlib.pyplot as plt
-from models.td import Conv2d_TD
+from models.td_non_uniSparse import Conv2d_TD
 plt.rcParams.update({'font.size': 24})
 
 class Hook_record_input():
@@ -141,7 +142,7 @@ def print_table(values, columns, epoch, logger):
 
 #@profile
 def run_epoch(loader, model, criterion, optimizer=None,
-              phase="train", loss_scaling=1.0, lambda_BN=0.0):
+              phase="train", loss_scaling=1.0, lambda_BN=0.0, gamma=0.0, block_size=16):
     assert phase in ["train", "val", "test"], "invalid running phase"
     loss_sum = 0.0
     correct = 0.0
@@ -154,6 +155,9 @@ def run_epoch(loader, model, criterion, optimizer=None,
     #Hooks_grad = add_grad_record_Hook(model)
     with torch.autograd.set_grad_enabled(phase=="train"):
         for i, (input, target) in enumerate(loader):
+            if phase == 'train':
+                model = update_threshold(model, gamma, block_size)
+
             input = input.cuda()
             target = target.cuda()
             output = model(input)
@@ -245,39 +249,47 @@ def plot_data_dict(data_dict_list, result_file_name, xlabel='x', ylabel='y', ysc
     plt.grid()
     plt.savefig(result_file_name, bbox_inches='tight')
 
-
-def expand_model(model, layer_norms = torch.Tensor().cuda()):
+def expand_model(model, model_block_values=torch.Tensor(), block_size=16):
     for layer in model.children():
         if len(list(layer.children())) > 0:
-            layer_norms = expand_model(layer, layer_norms)
+            model_block_values = expand_model(layer, model_block_values)
         else:
             if isinstance(layer, Conv2d_TD):
-                layer_norm = torch.norm(layer.weight.view(-1), 2).view(1,1)
-                layer_norms = torch.cat((layer_norms, layer_norm))
-    return layer_norms
+                # block values of each layer
+                layer_block_values = F.avg_pool2d(layer.weight.data.abs().permute(2,3,0,1),
+                                    kernel_size=(block_size, block_size),
+                                    stride=(block_size, block_size))
 
-def model_sorting(model, gamma):
+                layer_block_values = layer_block_values.contiguous().view(-1)
+
+                model_block_values = torch.cat((model_block_values.view(-1), layer_block_values.view(-1)))
+                
+    return model_block_values
+
+def model_threshold(model, gamma, block_size):
     empty = torch.Tensor()
     if torch.cuda.is_available():
         empty = empty.cuda()
-        
-    layer_norm = expand_model(model, empty)
-    layer_gamma = layer_norm / torch.sum(layer_norm) * gamma
-    print(f'Sum of gamma values in all different layers: {torch.sum(layer_gamma)}')
+    
+    model_block_values = expand_model(model, empty, block_size)
+    sorted_block_values, indices = torch.sort(model_block_values.contiguous().view(-1))
 
-    conv_count = 0
-    for module in model.children():
-        if len(list(module.children())) > 0:
-            for layer in module.children():
-                for item in layer.children():
-                    if isinstance(item, Conv2d_TD):
-                        item._setgamma(layer_gamma[conv_count])
-                        conv_count+=1
+    thre_index = int(model_block_values.data.numel() * gamma)
+    threshold = sorted_block_values[thre_index]
 
-def print_layers(model):
-    for layer in model.children():
-        print(layer)
+    return threshold
+
+def update_threshold(model, gamma, block_size):
+    for m in model.modules():
+        if hasattr(m, 'count'):
+            count=m.count
+            if hasattr(m, 'threshold'):
+                if count % 1000 == 0:
+                    threshold = model_threshold(model, gamma, block_size)
+                    # print(f'update threshold! | threshold={threshold}')
+                    m.threshold = threshold
+    return model
 
 if __name__ == "__main__":
-    df = log2df('logs/resnet20_FP8_TD_4_0.0_0.0_0.9375_0.99_5.0_0.0_0_0.log')
+    df = log2df('logs/exp042220/resnet20_FP8_TD_LayerSort_4_0.0_0.0_0.5_0.99_5.0_1e-4_0_0.log')
     print(df['aspar'].mean())

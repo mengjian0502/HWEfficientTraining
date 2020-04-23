@@ -4,14 +4,17 @@ import torch.nn.functional as F
 
 class Conv2d_TD(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, 
-                 padding=0, dilation=1, groups=1, bias=True, gamma=0.0, alpha=0.0, block_size=16):
+                 padding=0, dilation=1, groups=1, bias=True, gamma=0.0, alpha=0.0, block_size=16, non_uni_sparse=True, threshold=0.0):
         super(Conv2d_TD, self).__init__(in_channels, out_channels, kernel_size,
                 stride=stride, padding=padding, dilation=dilation, groups=groups,
                 bias=bias)
         self.gamma = gamma
         self.alpha = alpha
         self.block_size = block_size
+        self.non_uni_sparse = non_uni_sparse
         self.count = 0
+        self.threshold = threshold          # layer-wise threshold
+
     
     def forward(self, input):
         # sort blocks by mean absolute value
@@ -22,8 +25,14 @@ class Conv2d_TD(nn.Conv2d):
                                     kernel_size=(self.block_size, self.block_size),
                                     stride=(self.block_size, self.block_size))
                     sorted_block_values, indices = torch.sort(block_values.contiguous().view(-1))
-                    thre_index = int(block_values.data.numel() * self.gamma)
-                    threshold = sorted_block_values[thre_index]
+
+                    if self.non_uni_sparse:
+                        threshold = self.threshold
+                        # print(f'update threshold! | threshold={threshold}')
+                    else:
+                        thre_index = int(block_values.data.numel() * self.gamma)
+                        threshold = sorted_block_values[thre_index]
+
                     mask_small = 1 - block_values.gt(threshold.cuda()).float().cuda() # mask for blocks candidates for pruning
                     mask_dropout = torch.rand_like(block_values).lt(self.alpha).float().cuda()
                     mask_keep = 1.0 - mask_small * mask_dropout
@@ -42,8 +51,9 @@ class Conv2d_TD(nn.Conv2d):
         return out
     
     def extra_repr(self):
-        return super(Conv2d_TD, self).extra_repr() + ', gamma={}, alpha={}, block_size={}'.format(
-                self.gamma, self.alpha, self.block_size)
+
+        return super(Conv2d_TD, self).extra_repr() + ', gamma={}, alpha={}, block_size={}, non_uni_sparse={}, threshold={}'.format(
+                self.gamma, self.alpha, self.block_size, self.non_uni_sparse, self.threshold)
 
 class Conv2d_col_TD(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, 
