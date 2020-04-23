@@ -1,11 +1,16 @@
 #!/bin/bash
-block_size=${1:-1}
+block_size=${1:-4}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
-gamma_final=${4:-0.0}
-alpha_final=${5:-0.0}
-log_name="./logs/mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.log" 
-save_file_name="mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}.pth" 
+gamma_final=${4:-0.75}
+alpha_final=${5:-0.99}
+ramping_power=${6:-5.0}
+lambda_BN=${7:-1e-4}
+# lambda_BN=${7:-0.0}
+init_BN_bias=${8:-0}
+gradient_gamma=${9:-0}
+log_name="./logs/mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.log" 
+save_file_name="mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.pth" 
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \
@@ -17,6 +22,10 @@ python train.py --dataset CIFAR10 \
                 --TD_alpha $alpha \
                 --TD_gamma_final $gamma_final \
                 --TD_alpha_final $alpha_final \
+                --ramping_power $ramping_power \
+                --lambda_BN $lambda_BN \
+                --init_BN_bias $init_BN_bias \
+                --gradient_gamma $gradient_gamma \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \

@@ -1,17 +1,18 @@
 #!/bin/bash
-block_size=${1:-8}
+block_size=${1:-4}
 gamma=${2:-0.0}
 alpha=${3:-0.0}
 gamma_final=${4:-0.75}
 alpha_final=${5:-0.99}
-ramping_power=${6:--5.0}
+ramping_power=${6:-5.0}
 lambda_BN=${7:-1e-4}
+# lambda_BN=${7:-0.0}
 init_BN_bias=${8:-0}
 gradient_gamma=${9:-0}
-log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.log" 
+log_name="./logs/exp042220/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.log" 
 save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.pth" 
 
-python train.py --dataset CIFAR10 \
+python train1.py --dataset CIFAR10 \
                 --data_path ./data \
                 --model ResNet20LP_TD \
                 --log_file $log_name \

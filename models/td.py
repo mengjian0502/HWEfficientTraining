@@ -13,6 +13,10 @@ class Conv2d_TD(nn.Conv2d):
         self.block_size = block_size
         self.count = 0
     
+    def _setgamma(self, gamma):
+        self.gamma = gamma
+        # print(f'new gamma = {self.gamma}')
+    
     def forward(self, input):
         # sort blocks by mean absolute value
         if self.gamma > 0 and self.alpha > 0:

@@ -1,12 +1,12 @@
 #!/bin/bash
-block_size=${1:-2}
+block_size=${1:-4}
 gamma=${2:-0.75}
 alpha=${3:-1.0}
 
-log_name="./logs/mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_eval.log" 
-save_file_name="mobilenetv1_FP8_TD_${block_size}_${gamma}_${alpha}_eval.pth" 
+log_name="./logs/mobilenetv1_FP8_TD_4_0.0_0.0_0.75_0.99_5.0_0.0_0_0_eval.log" 
+save_file_name="mobilenetv1_FP8_TD_4_0.0_0.0_0.75_0.99_5.0_0.0_0_0_eval.pth" 
 
-eval_path="./checkpoint/mobilenetv1_FP8_TD_${block_size}_0.0_0.0_${gamma}_0.99.pth"
+eval_path="./checkpoint/sparsity_analysis/mobilenetv1_FP8_TD_4_0.0_0.0_0.75_0.99_5.0_1e-4_0_0.pth"
 
 python train.py --dataset CIFAR10 \
                 --data_path ./data \

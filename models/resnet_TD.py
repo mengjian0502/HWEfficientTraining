@@ -6,7 +6,7 @@ import math
 from torch.nn import init
 from .td import Conv2d_TD, Linear_TD, Conv2d_col_TD
 
-__all__ = ['ResNet32_TD']
+__all__ = ['ResNet20_TD']
 
 def conv3x3_td(in_planes, out_planes, kernel_size=3, stride=1, padding=1, bias=False, gamma=0.5, alpha=0.5, block_size=16):
     # return Conv2d_TD(in_planes, out_planes, kernel_size=kernel_size, stride=stride,
@@ -118,10 +118,10 @@ class CifarResNet(nn.Module):
     return self.classifier(x)
 
 
-class ResNet32_TD:
+class ResNet20_TD:
   base = CifarResNet
   args = list()
-  kwargs = {'depth': 32}
+  kwargs = {'depth': 20}
   transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),

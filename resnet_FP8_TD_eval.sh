@@ -1,18 +1,14 @@
 #!/bin/bash
-block_size=${1:-8}
-gamma=${2:-0.75}
+block_size=${1:-4}
+gamma=${2:-0.9375}
 alpha=${3:-1.0}
-ramping_power=${6:--5.0}
-lambda_BN=${7:-1e-4}
-init_BN_bias=${8:-0}
-gradient_gamma=${9:-0}
 
-log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}_eval.log" 
-save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}_eval.pth" 
+log_name="./logs/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_sparse_eval.log" 
+save_file_name="resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_sparse_eval.pth" 
 
-eval_path="./checkpoint/resnet20_FP8_TD_${block_size}_${gamma}_${alpha}_${gamma_final}_${alpha_final}_${ramping_power}_${lambda_BN}_${init_BN_bias}_${gradient_gamma}.pth"
+eval_path="./checkpoint/sparsity_analysis/resnet20_FP8_TD_4_0.0_0.0_0.9375_0.99_5.0_0.0_0_0.pth"
 
-python train.py --dataset CIFAR10 \
+python train1.py --dataset CIFAR10 \
                 --data_path ./data \
                 --model ResNet20LP_TD \
                 --log_file $log_name \
@@ -20,10 +16,6 @@ python train.py --dataset CIFAR10 \
                 --block_size $block_size \
                 --TD_gamma $gamma \
                 --TD_alpha $alpha \
-                --ramping_power $ramping_power \
-                --lambda_BN $lambda_BN \
-                --init_BN_bias $init_BN_bias \
-                --gradient_gamma $gradient_gamma \
                 --epochs=200 \
                 --lr_init=0.05 \
                 --wd=5e-4 \

@@ -7,6 +7,7 @@ import matplotlib
 import numpy as np
 matplotlib.use('svg')
 import matplotlib.pyplot as plt
+from models.td import Conv2d_TD
 plt.rcParams.update({'font.size': 24})
 
 class Hook_record_input():
@@ -177,25 +178,6 @@ def run_epoch(loader, model, criterion, optimizer=None,
         'accuracy': correct / float(ttl) * 100.0,
     }
 
-# Learning rate schedule for fast training
-# class PiecewiseLinear(namedtuple('PiecewiseLinear', ('knots', 'vals'))):
-#     def __call__(self, t):
-#         return np.interp([t], self.knots, self.vals)[0]
-
-# class Const(namedtuple('Const', ['val'])):
-#     def __call__(self, x):
-#         return self.val
-
-def curve_plot(epoch, train_acc, test_acc, filename):
-    plt.figure(figsize=(10,8))
-    plt.plot(np.arange(1, epoch+1, 1), np.array(train_acc), label='training accuracy')
-    plt.plot(np.arange(1, epoch+1, 1), np.array(test_acc), label='test accuracy')
-    
-    plt.grid(True)
-    plt.legend(loc='best')
-    plt.xlabel('Epoch')
-    plt.ylabel('Acc')
-    plt.savefig(filename+'.png', dpi=200)
 def log2df(log_file_name):
     '''
     return a pandas dataframe from a log file
@@ -264,5 +246,38 @@ def plot_data_dict(data_dict_list, result_file_name, xlabel='x', ylabel='y', ysc
     plt.savefig(result_file_name, bbox_inches='tight')
 
 
+def expand_model(model, layer_norms = torch.Tensor().cuda()):
+    for layer in model.children():
+        if len(list(layer.children())) > 0:
+            layer_norms = expand_model(layer, layer_norms)
+        else:
+            if isinstance(layer, Conv2d_TD):
+                layer_norm = torch.norm(layer.weight.view(-1), 2).view(1,1)
+                layer_norms = torch.cat((layer_norms, layer_norm))
+    return layer_norms
+
+def model_sorting(model, gamma):
+    empty = torch.Tensor()
+    if torch.cuda.is_available():
+        empty = empty.cuda()
+        
+    layer_norm = expand_model(model, empty)
+    layer_gamma = layer_norm / torch.sum(layer_norm) * gamma
+    print(f'Sum of gamma values in all different layers: {torch.sum(layer_gamma)}')
+
+    conv_count = 0
+    for module in model.children():
+        if len(list(module.children())) > 0:
+            for layer in module.children():
+                for item in layer.children():
+                    if isinstance(item, Conv2d_TD):
+                        item._setgamma(layer_gamma[conv_count])
+                        conv_count+=1
+
+def print_layers(model):
+    for layer in model.children():
+        print(layer)
+
 if __name__ == "__main__":
-    log2df('logs/VGG16BN_FP8_TD_4_0.0_0.0_0.9375_0.99_5.0.log')
+    df = log2df('logs/resnet20_FP8_TD_4_0.0_0.0_0.9375_0.99_5.0_0.0_0_0.log')
+    print(df['aspar'].mean())

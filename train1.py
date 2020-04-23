@@ -151,6 +151,7 @@ if 'TD' in args.model:
 model = model_cfg.base(*model_cfg.args, num_classes=num_classes, **model_cfg.kwargs)
 logger.info('Model: {}'.format(model))
 model.cuda()
+
 criterion = F.cross_entropy
 optimizer = SGD(
    model.parameters(),
@@ -228,6 +229,10 @@ if args.TD_gamma_final > 0 or args.TD_alpha_final > 0:
 for epoch in range(args.epochs):
     time_ep = time.time()
     TD_gamma, TD_alpha = update_gamma_alpha(epoch)
+    
+    # update the gamma value for each layer
+    utils.model_sorting(model, TD_gamma)
+
     train_res = get_result(loaders, model, "train", loss_scaling, args.lambda_BN)
     test_res = get_result(loaders, model, "test", loss_scaling)
     scheduler.step()
